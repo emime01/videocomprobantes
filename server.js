@@ -7,7 +7,15 @@ const path       = require('path');
 const fs         = require('fs');
 const os         = require('os');
 
-ffmpeg.setFfmpegPath(ffmpegPath);
+// Use system ffmpeg if available (Railway), otherwise use ffmpeg-static
+const { execSync } = require('child_process');
+let resolvedFfmpegPath = ffmpegPath;
+try {
+  const systemFfmpeg = execSync('which ffmpeg').toString().trim();
+  if(systemFfmpeg) { resolvedFfmpegPath = systemFfmpeg; console.log('Using system FFmpeg:', systemFfmpeg); }
+} catch {}
+ffmpeg.setFfmpegPath(resolvedFfmpegPath);
+console.log('FFmpeg path:', resolvedFfmpegPath);
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -35,6 +43,11 @@ const upload = multer({
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Explicit root route fallback
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 app.use(express.json({ limit: '10mb' }));
 
 // ── Helper: clean up job directory ────────────────────────────────────────
@@ -212,15 +225,12 @@ function processSegment({ input, output, hasOverlay, isIntro, soporteName, desde
       cmd.input(logoPath);
       const filterComplex = `[0:v]${vfChain}[base];[1:v]scale=210:-1[logo];[base][logo]overlay=W-w-28:H-h-18`;
       cmd
-        .complexFilter(filterComplex)
+        .complexFilter(filterComplex, 'out')
         .outputOptions([
-          '-map [out]',
           '-c:v libx264', '-preset fast', '-crf 22',
           '-c:a aac', '-b:a 128k',
           '-movflags +faststart',
         ]);
-      // fix map — complexFilter names last output automatically
-      cmd.outputOptions(['-map [out]']);
     } else {
       cmd
         .videoFilter(vfChain)
@@ -234,7 +244,7 @@ function processSegment({ input, output, hasOverlay, isIntro, soporteName, desde
     cmd
       .output(output)
       .on('end', resolve)
-      .on('error', reject)
+      .on('error', (err, stdout, stderr) => { console.error('FFmpeg error:', err.message, stderr); reject(err); })
       .run();
   });
 }

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Movimagen – Videocomprobantes</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--or:#E8601C;--or2:#c04e15;--or3:#ff7a3d;--bg:#f7f5f2;--w:#fff;--bd:#e8e0d8;--mu:#999;--tx:#1a1a1a;--sf:#faf9f7}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+.hdr{background:var(--w);border-bottom:1px solid var(--bd);padding:0 28px;height:56px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 1px 8px rgba(0,0,0,.05)}
+.hdr-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:20px;color:var(--or)}
+.hdr-sub{font-size:10px;color:#bbb;letter-spacing:2px;text-transform:uppercase}
+.hdr-badge{margin-left:auto;background:#fff4ee;border:1px solid #f5c9a8;color:var(--or);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.layout{display:grid;grid-template-columns:268px 1fr;min-height:calc(100vh - 56px)}
+.sidebar{background:var(--w);border-right:1px solid var(--bd);padding:20px 0;display:flex;flex-direction:column}
+.sidebar-sec{padding:10px 20px 4px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#ccc;margin-top:10px}
+.main{padding:28px 32px;overflow-y:auto;max-height:calc(100vh - 56px)}
+.info-block{padding:13px 20px;border-bottom:1px solid var(--bd)}
+.info-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ccc;margin-bottom:4px}
+.info-val{font-size:13px;font-weight:600}.info-val.empty{color:#ccc;font-weight:400}
+.clip-row{display:flex;align-items:center;gap:8px;padding:8px 20px 8px 24px;font-size:12px;color:#777}
+.clip-dot{width:6px;height:6px;border-radius:50%;background:var(--or);flex-shrink:0}
+.clip-name-s{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clip-dur-s{font-size:11px;color:#bbb}
+.card{background:var(--w);border:1px solid var(--bd);border-radius:13px;padding:22px;margin-bottom:18px;box-shadow:0 1px 5px rgba(0,0,0,.04)}
+.card-title{font-family:'Montserrat',sans-serif;font-weight:700;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--or);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.step-num{background:var(--or);color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+label.lbl{font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--mu)}
+input[type=text],input[type=date]{padding:9px 13px;border:1.5px solid #e0d8d0;border-radius:8px;font-family:inherit;font-size:14px;outline:none;background:var(--sf);transition:border-color .2s;width:100%}
+input:focus{border-color:var(--or)}
+.asset-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.asset-zone{border:2px dashed #ddd;border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;background:var(--sf);transition:all .2s;position:relative;min-height:86px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.asset-zone:hover{border-color:var(--or);background:#fff8f4}
+.asset-zone.loaded{border-style:solid;border-color:#f5c9a8;background:#fff8f4}
+.asset-icon{font-size:22px}
+.asset-lbl{font-size:11px;font-weight:600;color:var(--mu)}
+.asset-sub{font-size:10px;color:#bbb}
+.asset-loaded-lbl{font-size:11px;color:var(--or);font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.asset-del{position:absolute;top:5px;right:7px;background:none;border:none;cursor:pointer;color:#ccc;font-size:14px}
+.asset-del:hover{color:#e74c3c}
+.drop-zone{border:2px dashed #ddd;border-radius:13px;padding:28px 20px;text-align:center;cursor:pointer;background:var(--sf);transition:all .25s}
+.drop-zone:hover,.drop-zone.over{border-color:var(--or);background:#fff8f4}
+.drop-icon{font-size:38px;margin-bottom:8px}
+.drop-title{font-weight:700;font-size:14px;margin-bottom:3px}
+.drop-sub{font-size:12px;color:#bbb}
+.video-list{display:flex;flex-direction:column;gap:7px;margin-top:14px}
+.video-item{display:flex;align-items:center;gap:11px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:9px 12px;transition:border-color .2s}
+.video-item:hover{border-color:#f5c9a8}
+.vthumb{width:68px;height:44px;flex-shrink:0;border-radius:7px;overflow:hidden;background:#111}
+.vthumb video{width:100%;height:100%;object-fit:cover}
+.vi-info{flex:1;min-width:0}
+.vi-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vi-name-edit{font-weight:600;font-size:13px;border:1.5px solid var(--or);border-radius:6px;padding:3px 8px;outline:none;font-family:inherit;background:var(--w);color:var(--tx);width:100%}
+.vi-meta{font-size:11px;color:var(--mu);margin-top:2px}
+.vi-num{background:#f0ebe4;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700;color:#888;flex-shrink:0}
+.vi-btns{display:flex;align-items:center;gap:3px}
+.vi-btn{background:none;border:1px solid var(--bd);width:23px;height:23px;border-radius:5px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.vi-btn:hover:not(:disabled){background:var(--or);color:#fff;border-color:var(--or)}
+.vi-btn:disabled{opacity:.3;cursor:default}
+.vi-del{background:none;border:none;cursor:pointer;color:#ddd;font-size:17px;padding:2px 6px;border-radius:5px;transition:color .15s}
+.vi-del:hover{color:#e74c3c}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.ov-opt{background:var(--sf);border:1.5px solid var(--bd);border-radius:10px;padding:11px;cursor:pointer;transition:all .2s;text-align:center}
+.ov-opt.active{border-color:var(--or);background:#fff8f4}
+.ov-opt-icon{font-size:20px;margin-bottom:3px}
+.ov-opt-lbl{font-size:12px;font-weight:600}
+.preview-wrap{background:#111;border-radius:11px;overflow:hidden;position:relative;aspect-ratio:16/9}
+.preview-canvas{width:100%;height:100%;display:block}
+.preview-pill{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;padding:3px 9px;border-radius:20px;backdrop-filter:blur(4px)}
+.btn-generate{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:15px;border-radius:10px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:14px;cursor:pointer;border:none;background:linear-gradient(135deg,var(--or),var(--or3));color:#fff;box-shadow:0 4px 22px rgba(232,96,28,.28);transition:all .2s}
+.btn-generate:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(232,96,28,.35)}
+.btn-generate:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+.progress-wrap{margin-top:14px;display:none}
+.progress-wrap.show{display:block}
+.progress-top{display:flex;justify-content:space-between;font-size:12px;color:var(--mu);margin-bottom:6px}
+.progress-bar{background:#f0ebe4;border-radius:10px;height:7px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(to right,var(--or),#ffd600);border-radius:10px;transition:width .4s ease;width:0%}
+.prog-log{margin-top:8px;font-size:11px;color:#aaa;max-height:80px;overflow-y:auto;line-height:1.7;font-family:monospace}
+.result-card{background:linear-gradient(135deg,var(--or),var(--or2));border-radius:13px;padding:22px;color:#fff;display:none;margin-top:14px;text-align:center}
+.result-card.show{display:block}
+.result-title{font-family:'Montserrat',sans-serif;font-weight:900;font-size:17px;margin-bottom:5px}
+.result-sub{opacity:.85;font-size:13px;margin-bottom:16px}
+.btn-dl{display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--or);padding:11px 26px;border-radius:8px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:14px;border:none;cursor:pointer;transition:transform .2s}
+.btn-dl:hover{transform:scale(1.04)}
+.toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid var(--bd);border-radius:10px;padding:12px 17px;font-size:13px;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.1);transform:translateY(80px);opacity:0;transition:all .3s;z-index:999;max-width:320px;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{border-left:4px solid #2ecc71}
+.toast.err{border-left:4px solid var(--or)}
+/* Upload progress bar overlay */
+.upload-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;backdrop-filter:blur(4px)}
+.upload-overlay.show{display:flex}
+.upload-box{background:#fff;border-radius:16px;padding:36px 48px;text-align:center;min-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.upload-title{font-family:'Montserrat',sans-serif;font-weight:800;font-size:18px;color:var(--tx);margin-bottom:6px}
+.upload-sub{font-size:13px;color:var(--mu);margin-bottom:22px}
+.upload-bar-wrap{background:#f0ebe4;border-radius:10px;height:10px;overflow:hidden;margin-bottom:10px}
+.upload-bar{height:100%;background:linear-gradient(to right,var(--or),#ffd600);border-radius:10px;transition:width .3s;width:0%}
+.upload-pct{font-size:13px;color:var(--or);font-weight:700}
+.spin{animation:spin 1s linear infinite;display:inline-block;font-size:28px;margin-bottom:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- Upload / processing overlay -->
+<div class="upload-overlay" id="upload-overlay">
+  <div class="upload-box">
+    <div class="spin">⚙️</div>
+    <div class="upload-title" id="uo-title">Subiendo videos...</div>
+    <div class="upload-sub" id="uo-sub">Esto puede tardar según el tamaño de los archivos</div>
+    <div class="upload-bar-wrap"><div class="upload-bar" id="uo-bar"></div></div>
+    <div class="upload-pct" id="uo-pct">0%</div>
+  </div>
+</div>
+
+<div class="hdr">
+  <span class="hdr-logo">movimagen</span>
+  <span class="hdr-sub">· Publicidad OOH</span>
+  <div class="hdr-badge">Videocomprobantes</div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="info-block"><div class="info-label">Cliente</div><div class="info-val empty" id="sb-cliente">Sin completar</div></div>
+    <div class="info-block"><div class="info-label">Campaña</div><div class="info-val empty" id="sb-campana">Sin completar</div></div>
+    <div class="info-block"><div class="info-label">Periodo</div><div class="info-val empty" id="sb-periodo">Sin completar</div></div>
+    <div class="info-block" style="border-bottom:none"><div class="info-label">Duración total</div><div class="info-val" id="sb-dur">0:00</div></div>
+    <div class="sidebar-sec">Clips</div>
+    <div id="sb-clips" style="flex:1;overflow-y:auto;padding-bottom:12px">
+      <div style="padding:14px 20px;font-size:12px;color:#ccc">Sin videos cargados</div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- 1. Datos -->
+    <div class="card">
+      <div class="card-title"><span class="step-num">1</span>Datos de la campaña</div>
+      <div class="form-grid">
+        <div class="form-group"><label class="lbl">Cliente *</label><input type="text" id="f-cliente" placeholder="Ej: Veocasas" oninput="updateSidebar()"></div>
+        <div class="form-group"><label class="lbl">Campaña *</label><input type="text" id="f-campana" placeholder="Ej: Lanzamiento" oninput="updateSidebar()"></div>
+        <div class="form-group"><label class="lbl">Desde *</label><input type="date" id="f-desde" oninput="updateSidebar();drawPreview()"></div>
+        <div class="form-group"><label class="lbl">Hasta *</label><input type="date" id="f-hasta" oninput="updateSidebar();drawPreview()"></div>
+        <div class="form-group"><label class="lbl">Duración overlay (segundos)</label><input type="text" id="f-overdur" value="5" placeholder="5"></div>
+      </div>
+    </div>
+
+    <!-- 2. Assets -->
+    <div class="card">
+      <div class="card-title"><span class="step-num">2</span>Video intro, outro y logo del cliente</div>
+      <div class="asset-grid">
+        <div>
+          <label class="lbl" style="display:block;margin-bottom:7px">Video intro (opcional)</label>
+          <div class="asset-zone" id="az-intro" onclick="document.getElementById('fi-intro').click()">
+            <input type="file" id="fi-intro" accept="video/*" style="display:none" onchange="loadAsset(this,'intro')">
+            <span class="asset-icon" id="ai-intro">🎬</span>
+            <video id="av-intro" style="display:none;width:100%;border-radius:7px;max-height:52px;object-fit:cover" muted></video>
+            <span class="asset-loaded-lbl" id="al-intro" style="display:none"></span>
+            <span class="asset-lbl">Subir intro</span>
+            <button class="asset-del" id="ad-intro" style="display:none" onclick="clearAsset(event,'intro')">✕</button>
+          </div>
+        </div>
+        <div>
+          <label class="lbl" style="display:block;margin-bottom:7px">Video outro (opcional)</label>
+          <div class="asset-zone" id="az-outro" onclick="document.getElementById('fi-outro').click()">
+            <input type="file" id="fi-outro" accept="video/*" style="display:none" onchange="loadAsset(this,'outro')">
+            <span class="asset-icon" id="ai-outro">🎬</span>
+            <video id="av-outro" style="display:none;width:100%;border-radius:7px;max-height:52px;object-fit:cover" muted></video>
+            <span class="asset-loaded-lbl" id="al-outro" style="display:none"></span>
+            <span class="asset-lbl">Subir outro</span>
+            <button class="asset-del" id="ad-outro" style="display:none" onclick="clearAsset(event,'outro')">✕</button>
+          </div>
+        </div>
+        <div>
+          <label class="lbl" style="display:block;margin-bottom:7px">Logo del cliente (opcional)</label>
+          <div class="asset-zone" id="az-logo" onclick="document.getElementById('fi-logo').click()">
+            <input type="file" id="fi-logo" accept="image/png,image/jpeg" style="display:none" onchange="loadLogo(this)">
+            <span class="asset-icon" id="ai-logo">🏷️</span>
+            <img id="av-logo" style="display:none;max-height:52px;max-width:100%;object-fit:contain;border-radius:5px">
+            <span class="asset-loaded-lbl" id="al-logo" style="display:none">Logo cargado</span>
+            <span class="asset-lbl">Subir logo (PNG/JPG)</span>
+            <span class="asset-sub">Se superpone en el intro</span>
+            <button class="asset-del" id="ad-logo" style="display:none" onclick="clearAsset(event,'logo')">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Videos -->
+    <div class="card">
+      <div class="card-title"><span class="step-num">3</span>Videos del comprobante</div>
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('fi-vids').click()"
+           ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDrop(event)">
+        <input type="file" id="fi-vids" accept="video/*" multiple style="display:none" onchange="addVideos(this.files)">
+        <div class="drop-icon">🎥</div>
+        <div class="drop-title">Arrastrá los videos o hacé click</div>
+        <div class="drop-sub">El nombre del archivo = nombre del soporte · MP4, MOV, WebM</div>
+      </div>
+      <div class="video-list" id="video-list"></div>
+    </div>
+
+    <!-- 4. Overlay -->
+    <div class="card">
+      <div class="card-title"><span class="step-num">4</span>Estilo del overlay</div>
+      <div class="ov-grid">
+        <div class="ov-opt active" id="ov-bottom" onclick="selectOverlay('bottom')"><div class="ov-opt-icon">⬇️</div><div class="ov-opt-lbl">Barra inferior</div></div>
+        <div class="ov-opt" id="ov-top" onclick="selectOverlay('top')"><div class="ov-opt-icon">⬆️</div><div class="ov-opt-lbl">Barra superior</div></div>
+      </div>
+      <div class="preview-wrap">
+        <canvas class="preview-canvas" id="prev-canvas" width="960" height="540"></canvas>
+        <span class="preview-pill">Vista previa</span>
+      </div>
+    </div>
+
+    <!-- 5. Generar -->
+    <div class="card">
+      <div class="card-title"><span class="step-num">5</span>Generar videocomprobante MP4</div>
+      <button class="btn-generate" id="btn-gen" onclick="doGenerate()">▶ Generar MP4</button>
+      <div class="progress-wrap" id="prog-wrap">
+        <div class="progress-top"><span id="prog-text">Preparando...</span><span id="prog-pct">0%</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+        <div class="prog-log" id="prog-log"></div>
+      </div>
+      <div class="result-card" id="result-card">
+        <div class="result-title">✅ Video listo</div>
+        <div class="result-sub" id="result-sub"></div>
+        <button class="btn-dl" id="btn-dl">⬇ Descargar MP4</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+let clips       = [];
+let assets      = { intro: null, outro: null, logo: null };
+let overlayStyle = 'bottom';
+let generating   = false;
+let resultUrl    = null;
+
+// ── Init ───────────────────────────────────────────────────────────────────
+window.onload = () => {
+  const t = new Date(), iso = t.toISOString().split('T')[0];
+  document.getElementById('f-desde').value = iso;
+  document.getElementById('f-hasta').value = `${t.getFullYear()}-12-31`;
+  updateSidebar(); drawPreview();
+};
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+const toast = (msg, type='err') => {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = `toast show ${type}`;
+  setTimeout(() => el.classList.remove('show'), 3500);
+};
+const fmtDur  = s => { s=Math.round(s||0); return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; };
+const fmtDate = s => { if(!s)return''; const [y,m,d]=s.split('-'); return `${d}/${m}/${y}`; };
+const sName   = f => f.replace(/\.[^.]+$/,'').replace(/[-_]/g,' ').trim();
+
+function setProgress(text, pct, log) {
+  document.getElementById('prog-wrap').classList.add('show');
+  document.getElementById('prog-text').textContent = text;
+  document.getElementById('prog-pct').textContent  = Math.round(pct)+'%';
+  document.getElementById('prog-fill').style.width = Math.min(pct,100)+'%';
+  if(log) { const el=document.getElementById('prog-log'); el.innerHTML+=`<div>> ${log}</div>`; el.scrollTop=el.scrollHeight; }
+}
+
+// ── Sidebar ────────────────────────────────────────────────────────────────
+function updateSidebar() {
+  const cl=document.getElementById('f-cliente').value.trim();
+  const ca=document.getElementById('f-campana').value.trim();
+  const de=document.getElementById('f-desde').value;
+  const ha=document.getElementById('f-hasta').value;
+  const set=(id,v)=>{const el=document.getElementById(id);el.textContent=v||'Sin completar';el.className=v?'info-val':'info-val empty';};
+  set('sb-cliente',cl); set('sb-campana',ca);
+  set('sb-periodo',(de&&ha)?`${fmtDate(de)} al ${fmtDate(ha)}`:'');
+  document.getElementById('sb-dur').textContent=fmtDur(clips.reduce((a,c)=>a+(c.duration||0),0));
+  const sc=document.getElementById('sb-clips');
+  sc.innerHTML=clips.length===0
+    ?'<div style="padding:14px 20px;font-size:12px;color:#ccc">Sin videos cargados</div>'
+    :clips.map(c=>`<div class="clip-row"><div class="clip-dot"></div><div class="clip-name-s">${c.name}</div><div class="clip-dur-s">${fmtDur(c.duration)}</div></div>`).join('');
+}
+
+// ── Assets ─────────────────────────────────────────────────────────────────
+function loadAsset(input, which) {
+  const f=input.files[0]; if(!f) return;
+  assets[which]={ file:f, name:f.name };
+  const az=document.getElementById(`az-${which}`), ai=document.getElementById(`ai-${which}`);
+  const av=document.getElementById(`av-${which}`), al=document.getElementById(`al-${which}`);
+  const ad=document.getElementById(`ad-${which}`);
+  az.classList.add('loaded'); ai.style.display='none';
+  av.src=URL.createObjectURL(f); av.style.display='block';
+  al.textContent=f.name.length>22?f.name.slice(0,20)+'…':f.name; al.style.display='block';
+  ad.style.display='block';
+  toast(`${which} cargado`, 'ok');
+}
+
+function loadLogo(input) {
+  const f=input.files[0]; if(!f) return;
+  assets.logo={ file:f, name:f.name };
+  const az=document.getElementById('az-logo'), ai=document.getElementById('ai-logo');
+  const av=document.getElementById('av-logo'), al=document.getElementById('al-logo');
+  const ad=document.getElementById('ad-logo');
+  az.classList.add('loaded'); ai.style.display='none';
+  av.src=URL.createObjectURL(f); av.style.display='block';
+  al.style.display='block'; ad.style.display='block';
+  toast('Logo cargado','ok');
+}
+
+function clearAsset(e, which) {
+  e.stopPropagation(); assets[which]=null;
+  const az=document.getElementById(`az-${which}`), ai=document.getElementById(`ai-${which}`);
+  const av=document.getElementById(`av-${which}`), al=document.getElementById(`al-${which}`);
+  const ad=document.getElementById(`ad-${which}`);
+  az.classList.remove('loaded'); ai.style.display='';
+  av.style.display='none'; av.src=''; al.style.display='none'; ad.style.display='none';
+}
+
+// ── Drag & drop ────────────────────────────────────────────────────────────
+const dzOver  = e => { e.preventDefault(); document.getElementById('drop-zone').classList.add('over'); };
+const dzLeave = ()  => document.getElementById('drop-zone').classList.remove('over');
+const dzDrop  = e   => { e.preventDefault(); dzLeave(); addVideos(e.dataTransfer.files); };
+
+// ── Clips ──────────────────────────────────────────────────────────────────
+function addVideos(files) {
+  [...files].forEach(file => {
+    if(!file.type.startsWith('video/')) { toast(`"${file.name}" no es un video`); return; }
+    const url=URL.createObjectURL(file);
+    const vid=document.createElement('video'); vid.src=url;
+    vid.onloadedmetadata=()=>{
+      clips.push({id:Math.random().toString(36).slice(2,8),file,url,name:sName(file.name),rawName:file.name,duration:vid.duration,editing:false});
+      renderList(); updateSidebar(); drawPreview();
+      toast(`"${sName(file.name)}" agregado`,'ok');
+    };
+  });
+}
+function renderList(){
+  const list=document.getElementById('video-list');
+  if(!clips.length){list.innerHTML='';return;}
+  list.innerHTML=clips.map((c,i)=>`
+    <div class="video-item">
+      <div class="vthumb"><video src="${c.url}" muted preload="metadata"></video></div>
+      <div class="vi-info">
+        ${c.editing
+          ?`<input class="vi-name-edit" id="ed-${c.id}" value="${c.name}" onblur="saveName('${c.id}')" onkeydown="if(event.key==='Enter')saveName('${c.id}')">`
+          :`<div class="vi-name">${c.name}</div>`}
+        <div class="vi-meta">${c.rawName} · ${fmtDur(c.duration)}</div>
+      </div>
+      <div class="vi-num">#${i+1}</div>
+      <div class="vi-btns">
+        <button class="vi-btn" onclick="editName('${c.id}')" title="Editar">✏️</button>
+        <button class="vi-btn" onclick="moveClip('${c.id}',-1)" ${i===0?'disabled':''}>▲</button>
+        <button class="vi-btn" onclick="moveClip('${c.id}',1)" ${i===clips.length-1?'disabled':''}>▼</button>
+      </div>
+      <button class="vi-del" onclick="removeClip('${c.id}')">✕</button>
+    </div>`).join('');
+  list.querySelectorAll('.vthumb video').forEach(v=>{
+    v.addEventListener('mouseenter',()=>v.play());
+    v.addEventListener('mouseleave',()=>{v.pause();v.currentTime=0;});
+  });
+}
+function editName(id){const c=clips.find(x=>x.id===id);if(!c)return;c.editing=true;renderList();setTimeout(()=>{const el=document.getElementById('ed-'+id);if(el){el.focus();el.select();}},40);}
+function saveName(id){const c=clips.find(x=>x.id===id);if(!c)return;const el=document.getElementById('ed-'+id);if(el)c.name=el.value.trim()||c.name;c.editing=false;renderList();updateSidebar();drawPreview();}
+function moveClip(id,dir){const i=clips.findIndex(x=>x.id===id);if(i+dir<0||i+dir>=clips.length)return;[clips[i],clips[i+dir]]=[clips[i+dir],clips[i]];renderList();updateSidebar();}
+function removeClip(id){clips=clips.filter(x=>x.id!==id);renderList();updateSidebar();drawPreview();}
+
+// ── Overlay style ──────────────────────────────────────────────────────────
+function selectOverlay(s){
+  overlayStyle=s;
+  document.getElementById('ov-bottom').classList.toggle('active',s==='bottom');
+  document.getElementById('ov-top').classList.toggle('active',s==='top');
+  drawPreview();
+}
+
+// ── Canvas preview ─────────────────────────────────────────────────────────
+function drawPreview(){
+  const canvas=document.getElementById('prev-canvas');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  const grd=ctx.createLinearGradient(0,0,W,H);
+  grd.addColorStop(0,'#2a1a0e'); grd.addColorStop(1,'#0e0e0e');
+  ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(255,255,255,0.03)'; ctx.lineWidth=1;
+  for(let x=0;x<W;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=80){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.font='65px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('🎥',W/2,H/2);
+  const desde=fmtDate(document.getElementById('f-desde').value)||'01/01/2026';
+  const hasta=fmtDate(document.getElementById('f-hasta').value)||'31/12/2026';
+  const soporte=clips.length>0?clips[0].name.toUpperCase():'NOMBRE DEL SOPORTE';
+  // Draw overlay preview
+  const barH=Math.round(H*0.18);
+  const y0=overlayStyle==='bottom'?H-barH:0;
+  const grd2=ctx.createLinearGradient(0,y0,0,y0+barH);
+  if(overlayStyle==='bottom'){grd2.addColorStop(0,'rgba(232,96,28,0)');grd2.addColorStop(0.3,'rgba(232,96,28,0.93)');grd2.addColorStop(1,'rgba(192,78,21,0.99)');}
+  else{grd2.addColorStop(0,'rgba(192,78,21,0.99)');grd2.addColorStop(0.7,'rgba(232,96,28,0.93)');grd2.addColorStop(1,'rgba(232,96,28,0)');}
+  ctx.fillStyle=grd2; ctx.fillRect(0,y0,W,barH);
+  const midY=overlayStyle==='bottom'?H-Math.round(barH*0.54):Math.round(barH*0.54);
+  const pad=Math.round(W*0.03);
+  ctx.fillStyle='#fff'; ctx.textAlign='left'; ctx.textBaseline='middle';
+  ctx.font=`bold ${Math.round(H*0.062)}px Montserrat,sans-serif`;
+  let t=soporte; while(t.length>2&&ctx.measureText(t).width>W*0.55)t=t.slice(0,-1);
+  ctx.fillText(t,pad,midY);
+  ctx.font=`${Math.round(H*0.03)}px 'DM Sans',sans-serif`;
+  ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.textAlign='right';
+  ctx.fillText(`Desde: ${desde}  Hasta: ${hasta}`,W-pad,midY);
+  ctx.font=`bold ${Math.round(H*0.024)}px Montserrat,sans-serif`;
+  ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.textBaseline=overlayStyle==='bottom'?'bottom':'top';
+  ctx.fillText('movimagen',W-pad,overlayStyle==='bottom'?H-Math.round(H*0.015):Math.round(H*0.015));
+}
+
+// ── GENERATE — send to server ──────────────────────────────────────────────
+async function doGenerate(){
+  const cliente=document.getElementById('f-cliente').value.trim();
+  const campana=document.getElementById('f-campana').value.trim();
+  const desde=fmtDate(document.getElementById('f-desde').value);
+  const hasta=fmtDate(document.getElementById('f-hasta').value);
+  const overDur=document.getElementById('f-overdur').value||'5';
+  if(!cliente||!campana){toast('Completá cliente y campaña');return;}
+  if(!desde||!hasta){toast('Completá las fechas');return;}
+  if(!clips.length){toast('Agregá al menos un video');return;}
+  if(generating)return;
+  generating=true; resultUrl=null;
+  document.getElementById('btn-gen').disabled=true;
+  document.getElementById('result-card').classList.remove('show');
+  document.getElementById('prog-log').innerHTML='';
+
+  try {
+    // Build FormData
+    const fd=new FormData();
+    fd.append('cliente',  cliente);
+    fd.append('campana',  campana);
+    fd.append('desde',    desde);
+    fd.append('hasta',    hasta);
+    fd.append('overDur',  overDur);
+    fd.append('overlayStyle', overlayStyle);
+    fd.append('clipNames', JSON.stringify(clips.map(c=>c.name)));
+
+    if(assets.intro?.file) fd.append('intro', assets.intro.file);
+    if(assets.outro?.file) fd.append('outro', assets.outro.file);
+    if(assets.logo?.file)  fd.append('logo',  assets.logo.file);
+    clips.forEach((c,i)=>fd.append(`clip${i}`, c.file));
+
+    // Show upload overlay with XHR progress
+    const overlay=document.getElementById('upload-overlay');
+    overlay.classList.add('show');
+    document.getElementById('uo-title').textContent='Subiendo videos...';
+    document.getElementById('uo-sub').textContent='Esto puede tardar según el tamaño de los archivos';
+
+    setProgress('Subiendo archivos al servidor...', 5);
+
+    const blob = await new Promise((resolve, reject) => {
+      const xhr=new XMLHttpRequest();
+      xhr.open('POST','/api/generate');
+      xhr.responseType='blob';
+
+      xhr.upload.onprogress=e=>{
+        if(e.lengthComputable){
+          const pct=Math.round((e.loaded/e.total)*100);
+          document.getElementById('uo-bar').style.width=pct+'%';
+          document.getElementById('uo-pct').textContent=pct+'%';
+          setProgress(`Subiendo... ${pct}%`, pct*0.4, pct===100?'✓ Upload completo, procesando...':null);
+          if(pct===100){
+            document.getElementById('uo-title').textContent='Procesando en servidor...';
+            document.getElementById('uo-sub').textContent='FFmpeg está procesando los videos. Puede tardar unos minutos.';
+            document.getElementById('uo-bar').style.width='100%';
+            setProgress('FFmpeg procesando en servidor...', 45, 'Aplicando overlay y concatenando...');
+          }
+        }
+      };
+
+      xhr.onload=()=>{
+        overlay.classList.remove('show');
+        if(xhr.status===200){
+          resolve(xhr.response);
+        } else {
+          // Try to read error message from blob
+          const reader=new FileReader();
+          reader.onload=()=>{ try{const e=JSON.parse(reader.result);reject(new Error(e.error||'Error del servidor'));}catch{reject(new Error(`Error ${xhr.status}`));} };
+          reader.readAsText(xhr.response);
+        }
+      };
+      xhr.onerror=()=>{ overlay.classList.remove('show'); reject(new Error('Error de red')); };
+      xhr.send(fd);
+    });
+
+    // Got the MP4 blob back
+    if(resultUrl) URL.revokeObjectURL(resultUrl);
+    resultUrl = URL.createObjectURL(blob);
+
+    const totalDur=clips.reduce((a,c)=>a+(c.duration||0),0);
+    document.getElementById('result-sub').textContent=
+      `${clips.length} clips · ${fmtDur(totalDur)} · ${(blob.size/1024/1024).toFixed(1)} MB · MP4`;
+    document.getElementById('btn-dl').onclick=()=>{
+      const a=document.createElement('a');
+      a.href=resultUrl;
+      a.download=`Movimagen_${cliente}_${campana}_videocomprobante.mp4`.replace(/\s+/g,'_');
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    };
+    document.getElementById('result-card').classList.add('show');
+    setProgress('¡Listo!',100,'✅ Video generado correctamente');
+    toast('✅ MP4 listo','ok');
+
+  } catch(err){
+    console.error(err);
+    document.getElementById('upload-overlay').classList.remove('show');
+    toast('Error: '+err.message);
+    setProgress('Error',0,'');
+  }
+
+  generating=false;
+  document.getElementById('btn-gen').disabled=false;
+}
+</script>
+</body>
+</html>
