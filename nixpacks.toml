@@ -1,8 +1,10 @@
-[phases.setup]
-nixPkgs = ["nodejs_20", "cairo", "pango", "libjpeg", "giflib", "librsvg", "pkg-config", "python3"]
-
-[phases.install]
-cmds = ["npm install"]
-
-[start]
-cmd = "node server.js"
+const { execSync } = require('child_process');
+const FFMPEG = require('ffmpeg-static');
+console.log('FFmpeg binary:', FFMPEG);
+try {
+  const filters = execSync(`${FFMPEG} -filters 2>&1`).toString();
+  const has = f => filters.includes(f);
+  ['drawtext','drawbox','overlay','scale','pad','lavfi','color','concat'].forEach(f => {
+    console.log(has(f) ? `✓ ${f}` : `✗ ${f}`);
+  });
+} catch(e) { console.log('Error:', e.message); }
