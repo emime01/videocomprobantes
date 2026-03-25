@@ -1,258 +1,199 @@
-const express    = require('express');
-const multer     = require('multer');
-const ffmpeg     = require('fluent-ffmpeg');
-const ffmpegPath = require('ffmpeg-static');
+const express  = require('express');
+const multer   = require('multer');
 const { v4: uuid } = require('uuid');
-const path       = require('path');
-const fs         = require('fs');
-const os         = require('os');
+const path     = require('path');
+const fs       = require('fs');
+const os       = require('os');
+const { spawn, execSync } = require('child_process');
 
-// Use system ffmpeg if available (Railway), otherwise use ffmpeg-static
-const { execSync } = require('child_process');
-let resolvedFfmpegPath = ffmpegPath;
-try {
-  const systemFfmpeg = execSync('which ffmpeg').toString().trim();
-  if(systemFfmpeg) { resolvedFfmpegPath = systemFfmpeg; console.log('Using system FFmpeg:', systemFfmpeg); }
-} catch {}
-ffmpeg.setFfmpegPath(resolvedFfmpegPath);
-console.log('FFmpeg path:', resolvedFfmpegPath);
+// ── Find FFmpeg ────────────────────────────────────────────────────────────
+let FFMPEG = '';
+try { FFMPEG = execSync('which ffmpeg').toString().trim(); } catch {}
+if(!FFMPEG) { try { FFMPEG = require('ffmpeg-static'); } catch {} }
+if(!FFMPEG) { console.error('FFmpeg not found!'); process.exit(1); }
+console.log('FFmpeg path:', FFMPEG);
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-// ── Temp dir for uploads & processing ─────────────────────────────────────
-const TMP = path.join(os.tmpdir(), 'movimagen');
-if(!fs.existsSync(TMP)) fs.mkdirSync(TMP, { recursive: true });
+// ── Temp dir (short path, no hyphens) ─────────────────────────────────────
+const TMP = path.join(os.tmpdir(), 'mv');
+fs.mkdirSync(TMP, { recursive: true });
 
-// ── Multer: accept multiple files ──────────────────────────────────────────
+// ── Assign jobId (no hyphens to avoid FFmpeg path issues) ─────────────────
+app.use((req, res, next) => {
+  req.jobId = uuid().replace(/-/g, '');
+  next();
+});
+
+// ── Multer storage ─────────────────────────────────────────────────────────
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const jobDir = path.join(TMP, req.jobId);
-    fs.mkdirSync(jobDir, { recursive: true });
-    cb(null, jobDir);
+    const d = path.join(TMP, req.jobId);
+    fs.mkdirSync(d, { recursive: true });
+    cb(null, d);
   },
-  filename: (req, file, cb) => cb(null, file.fieldname + '_' + Date.now() + path.extname(file.originalname))
+  filename: (req, file, cb) => {
+    const safe = file.fieldname.replace(/[^a-z0-9]/gi,'_');
+    const ext  = path.extname(file.originalname).toLowerCase() || '.mp4';
+    cb(null, safe + ext);
+  }
 });
+const upload = multer({ storage, limits: { fileSize: 500 * 1024 * 1024 } });
 
-// Assign a jobId before multer runs
-app.use((req, res, next) => { req.jobId = uuid(); next(); });
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 500 * 1024 * 1024 }, // 500 MB per file
-});
-
+// ── Static files ───────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Explicit root route fallback
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.use(express.json({ limit: '10mb' }));
 
-// ── Helper: clean up job directory ────────────────────────────────────────
-function cleanup(jobDir) {
-  try { fs.rmSync(jobDir, { recursive: true, force: true }); } catch {}
-}
+// ── Helpers ────────────────────────────────────────────────────────────────
+function cleanup(dir) { try { fs.rmSync(dir, { recursive: true, force: true }); } catch {} }
 
-// ── Helper: run ffmpeg command as promise ──────────────────────────────────
-function runFFmpeg(cmd) {
+function runFF(args) {
   return new Promise((resolve, reject) => {
-    cmd.on('end', resolve).on('error', reject).run();
+    console.log('FF:', args.join(' ').slice(0, 120));
+    const proc = spawn(FFMPEG, args);
+    let stderr = '';
+    proc.stderr.on('data', d => { stderr += d; });
+    proc.on('close', code => {
+      if(code === 0) resolve();
+      else reject(new Error(`FFmpeg exit ${code}: ${stderr.slice(-500)}`));
+    });
+    proc.on('error', reject);
   });
 }
 
-// ── Helper: escape text for FFmpeg drawtext ────────────────────────────────
 function esc(s) {
   return String(s)
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g,  "\\'")
-    .replace(/:/g,  '\\:')
-    .replace(/\[/g, '\\[')
-    .replace(/\]/g, '\\]');
+    .replace(/\\/g,'\\\\').replace(/'/g,"\\'")
+    .replace(/:/g,'\\:').replace(/\[/g,'\\[').replace(/\]/g,'\\]');
 }
 
 // ── POST /api/generate ─────────────────────────────────────────────────────
-// Fields: cliente, campana, desde, hasta, overDur, overlayStyle
-// Files:  intro (optional), outro (optional), logo (optional), clip0..clipN
-app.post('/api/generate',
-  upload.any(),
-  async (req, res) => {
-    const jobDir = path.join(TMP, req.jobId);
+app.post('/api/generate', upload.any(), async (req, res) => {
+  const jobDir = path.join(TMP, req.jobId);
+  fs.mkdirSync(jobDir, { recursive: true });
 
-    try {
-      const {
-        cliente    = '',
-        campana    = '',
-        desde      = '',
-        hasta      = '',
-        overDur    = '5',
-        overlayStyle = 'bottom',
-        clipNames  = '[]',   // JSON array of display names in order
-      } = req.body;
+  try {
+    const { cliente='', campana='', desde='', hasta='',
+            overDur='5', overlayStyle='bottom', clipNames='[]' } = req.body;
 
-      const names   = JSON.parse(clipNames);
-      const overSec = Math.max(1, parseFloat(overDur) || 5);
+    const names   = JSON.parse(clipNames);
+    const overSec = Math.max(1, parseFloat(overDur) || 5);
+    const fileMap = {};
+    (req.files||[]).forEach(f => { fileMap[f.fieldname] = f.path; });
 
-      // Map uploaded files by fieldname
-      const fileMap = {};
-      (req.files || []).forEach(f => { fileMap[f.fieldname] = f.path; });
+    const clipKeys = Object.keys(fileMap)
+      .filter(k => /^clip\d+$/.test(k))
+      .sort((a,b) => parseInt(a.slice(4))-parseInt(b.slice(4)));
 
-      // Collect clip files in order (clip0, clip1, ...)
-      const clipKeys = Object.keys(fileMap)
-        .filter(k => k.startsWith('clip'))
-        .sort((a,b) => parseInt(a.slice(4)) - parseInt(b.slice(4)));
+    if(!clipKeys.length) return res.status(400).json({ error: 'No se recibieron clips' });
 
-      if(clipKeys.length === 0) {
-        return res.status(400).json({ error: 'No se recibieron clips' });
-      }
+    const done = [];
+    let i = 0;
 
-      // ── Process each segment ─────────────────────────────────────────
-      const processedFiles = [];
-      let segIdx = 0;
-
-      // INTRO
-      if(fileMap['intro']) {
-        const outPath = path.join(jobDir, `seg${segIdx++}.mp4`);
-        await processSegment({
-          input:       fileMap['intro'],
-          output:      outPath,
-          hasOverlay:  false,
-          isIntro:     true,
-          logoPath:    fileMap['logo'] || null,
-        });
-        processedFiles.push(outPath);
-      }
-
-      // CLIPS
-      for(let i=0; i<clipKeys.length; i++) {
-        const key       = clipKeys[i];
-        const sName     = names[i] || `Soporte ${i+1}`;
-        const outPath   = path.join(jobDir, `seg${segIdx++}.mp4`);
-        await processSegment({
-          input:        fileMap[key],
-          output:       outPath,
-          hasOverlay:   true,
-          isIntro:      false,
-          soporteName:  sName,
-          desde, hasta, overSec, overlayStyle,
-          logoPath:     null,
-        });
-        processedFiles.push(outPath);
-      }
-
-      // OUTRO
-      if(fileMap['outro']) {
-        const outPath = path.join(jobDir, `seg${segIdx++}.mp4`);
-        await processSegment({
-          input:      fileMap['outro'],
-          output:     outPath,
-          hasOverlay: false,
-          isIntro:    false,
-          logoPath:   null,
-        });
-        processedFiles.push(outPath);
-      }
-
-      // ── Concat all segments ──────────────────────────────────────────
-      const concatListPath = path.join(jobDir, 'concat.txt');
-      const concatContent  = processedFiles.map(f => `file '${f}'`).join('\n');
-      fs.writeFileSync(concatListPath, concatContent);
-
-      const outputPath = path.join(jobDir, 'output.mp4');
-      await new Promise((resolve, reject) => {
-        ffmpeg()
-          .input(concatListPath)
-          .inputOptions(['-f concat', '-safe 0'])
-          .outputOptions(['-c copy', '-movflags +faststart'])
-          .output(outputPath)
-          .on('end', resolve)
-          .on('error', reject)
-          .run();
-      });
-
-      // ── Stream result to client ──────────────────────────────────────
-      const stat     = fs.statSync(outputPath);
-      const fileName = `Movimagen_${cliente}_${campana}_videocomprobante.mp4`
-        .replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '');
-
-      res.setHeader('Content-Type',        'video/mp4');
-      res.setHeader('Content-Length',      stat.size);
-      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-
-      const readStream = fs.createReadStream(outputPath);
-      readStream.pipe(res);
-      readStream.on('close', () => cleanup(jobDir));
-
-    } catch(err) {
-      console.error('Error generating video:', err);
-      cleanup(jobDir);
-      res.status(500).json({ error: err.message || 'Error procesando video' });
+    // INTRO
+    if(fileMap['intro']) {
+      const out = path.join(jobDir, `s${i++}.mp4`);
+      await segIntro(fileMap['intro'], out, fileMap['logo']||null);
+      done.push(out);
     }
+
+    // CLIPS
+    for(let c=0; c<clipKeys.length; c++) {
+      const out = path.join(jobDir, `s${i++}.mp4`);
+      await segClip(fileMap[clipKeys[c]], out, names[c]||`Soporte ${c+1}`, desde, hasta, overSec, overlayStyle);
+      done.push(out);
+    }
+
+    // OUTRO
+    if(fileMap['outro']) {
+      const out = path.join(jobDir, `s${i++}.mp4`);
+      await segPass(fileMap['outro'], out);
+      done.push(out);
+    }
+
+    // CONCAT
+    const listPath = path.join(jobDir, 'list.txt');
+    fs.writeFileSync(listPath, done.map(f=>`file '${f}'`).join('\n'));
+    const finalOut = path.join(jobDir, 'out.mp4');
+    await runFF(['-f','concat','-safe','0','-i',listPath,'-c','copy','-movflags','+faststart','-y',finalOut]);
+
+    // SEND
+    const stat = fs.statSync(finalOut);
+    const name = `Movimagen_${cliente}_${campana}.mp4`.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_.-]/g,'');
+    res.setHeader('Content-Type','video/mp4');
+    res.setHeader('Content-Length', stat.size);
+    res.setHeader('Content-Disposition',`attachment; filename="${name}"`);
+    const stream = fs.createReadStream(finalOut);
+    stream.pipe(res);
+    stream.on('close', () => cleanup(jobDir));
+
+  } catch(err) {
+    console.error('Error:', err.message);
+    cleanup(jobDir);
+    if(!res.headersSent) res.status(500).json({ error: err.message });
   }
-);
+});
 
-// ── Process one segment with FFmpeg ───────────────────────────────────────
-function processSegment({ input, output, hasOverlay, isIntro, soporteName, desde, hasta, overSec, overlayStyle, logoPath }) {
-  return new Promise((resolve, reject) => {
-    const cmd = ffmpeg(input);
+// ── Segment processors ─────────────────────────────────────────────────────
 
-    // Base video filter: normalize to 1280x720
-    const baseScale = 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2:color=black';
+const BASE = 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2:color=black';
 
-    let vfChain = baseScale;
-
-    if(hasOverlay) {
-      const soporte  = esc(String(soporteName).toUpperCase());
-      const periodo  = esc(`Desde: ${desde}  Hasta: ${hasta}`);
-      const mv       = 'movimagen';
-      const barH     = 130;
-      const barY     = overlayStyle === 'bottom' ? 'ih-130' : '0';
-      const textY    = overlayStyle === 'bottom' ? 'ih-84'  : '46';
-      const mvY      = overlayStyle === 'bottom' ? 'ih-16'  : '8';
-      const en       = `lte(t\\,${overSec})`;
-
-      vfChain += [
-        `,drawbox=x=0:y=${barY}:w=iw:h=${barH}:color=0xE8601C@0.92:t=fill:enable='${en}'`,
-        `,drawtext=text='${soporte}':fontsize=44:fontcolor=white:x=36:y=${textY}-22:enable='${en}'`,
-        `,drawtext=text='${periodo}':fontsize=22:fontcolor=white@0.92:x=w-tw-36:y=${textY}-11:enable='${en}'`,
-        `,drawtext=text='${mv}':fontsize=17:fontcolor=white@0.55:x=w-tw-24:y=${mvY}:enable='${en}'`,
-      ].join('');
-    }
-
-    // If logo and intro: use filter_complex to overlay logo
-    if(isIntro && logoPath) {
-      cmd.input(logoPath);
-      const filterComplex = `[0:v]${vfChain}[base];[1:v]scale=210:-1[logo];[base][logo]overlay=W-w-28:H-h-18`;
-      cmd
-        .complexFilter(filterComplex, 'out')
-        .outputOptions([
-          '-c:v libx264', '-preset fast', '-crf 22',
-          '-c:a aac', '-b:a 128k',
-          '-movflags +faststart',
-        ]);
-    } else {
-      cmd
-        .videoFilter(vfChain)
-        .outputOptions([
-          '-c:v libx264', '-preset fast', '-crf 22',
-          '-c:a aac', '-b:a 128k',
-          '-movflags +faststart',
-        ]);
-    }
-
-    cmd
-      .output(output)
-      .on('end', resolve)
-      .on('error', (err, stdout, stderr) => { console.error('FFmpeg error:', err.message, stderr); reject(err); })
-      .run();
-  });
+// Intro: normalize + optional logo overlay
+async function segIntro(input, output, logoPath) {
+  if(logoPath) {
+    const fc = `[0:v]${BASE}[base];[1:v]scale=200:-1[logo];[base][logo]overlay=W-w-25:H-h-15[out]`;
+    await runFF([
+      '-i',input,'-i',logoPath,
+      '-filter_complex',fc,
+      '-map','[out]','-map','0:a?',
+      '-c:v','libx264','-preset','fast','-crf','22',
+      '-c:a','aac','-b:a','128k',
+      '-movflags','+faststart','-y',output
+    ]);
+  } else {
+    await segPass(input, output);
+  }
 }
 
-// ── Health check ───────────────────────────────────────────────────────────
-app.get('/health', (req, res) => res.json({ ok: true, ffmpeg: ffmpegPath }));
+// Passthrough: just normalize
+async function segPass(input, output) {
+  await runFF([
+    '-i',input,
+    '-vf',BASE,
+    '-c:v','libx264','-preset','fast','-crf','22',
+    '-c:a','aac','-b:a','128k',
+    '-movflags','+faststart','-y',output
+  ]);
+}
 
-app.listen(PORT, () => {
-  console.log(`Movimagen Videocomprobantes corriendo en puerto ${PORT}`);
-  console.log(`FFmpeg: ${ffmpegPath}`);
-});
+// Clip: normalize + drawtext overlay
+async function segClip(input, output, soporteName, desde, hasta, overSec, overlayStyle) {
+  const soporte = esc(String(soporteName).toUpperCase());
+  const periodo = esc(`Desde: ${desde}  Hasta: ${hasta}`);
+  const barY    = overlayStyle==='bottom' ? 'ih-130' : '0';
+  const textY   = overlayStyle==='bottom' ? 'ih-84'  : '46';
+  const mvY     = overlayStyle==='bottom' ? 'ih-16'  : '8';
+  const en      = `lte(t\\,${overSec})`;
+
+  const vf = [
+    BASE,
+    `drawbox=x=0:y=${barY}:w=iw:h=130:color=0xE8601C@0.92:t=fill:enable='${en}'`,
+    `drawtext=text='${soporte}':fontsize=44:fontcolor=white:x=36:y=${textY}-22:enable='${en}'`,
+    `drawtext=text='${periodo}':fontsize=22:fontcolor=white@0.92:x=w-tw-36:y=${textY}-11:enable='${en}'`,
+    `drawtext=text='movimagen':fontsize=17:fontcolor=white@0.55:x=w-tw-24:y=${mvY}:enable='${en}'`,
+  ].join(',');
+
+  await runFF([
+    '-i',input,
+    '-vf',vf,
+    '-c:v','libx264','-preset','fast','-crf','22',
+    '-c:a','aac','-b:a','128k',
+    '-movflags','+faststart','-y',output
+  ]);
+}
+
+// ── Health ─────────────────────────────────────────────────────────────────
+app.get('/health', (req,res) => res.json({ ok:true, ffmpeg:FFMPEG }));
+app.listen(PORT, () => console.log(`Movimagen en puerto ${PORT}`));
