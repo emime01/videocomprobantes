@@ -4,13 +4,11 @@ const { v4: uuid } = require('uuid');
 const path     = require('path');
 const fs       = require('fs');
 const os       = require('os');
-const { spawn, execSync } = require('child_process');
+const { spawn } = require('child_process');
 
-// ── Find FFmpeg ────────────────────────────────────────────────────────────
-let FFMPEG = '';
-try { FFMPEG = execSync('which ffmpeg').toString().trim(); } catch {}
-if(!FFMPEG) { try { FFMPEG = require('ffmpeg-static'); } catch {} }
-if(!FFMPEG) { console.error('FFmpeg not found!'); process.exit(1); }
+// ── Always use ffmpeg-static (has drawtext/libfreetype compiled in) ────────
+const FFMPEG = require('ffmpeg-static');
+if(!FFMPEG) { console.error('ffmpeg-static not found!'); process.exit(1); }
 console.log('FFmpeg path:', FFMPEG);
 
 const app  = express();
