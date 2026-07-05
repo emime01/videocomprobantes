@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="1200" viewBox="0 0 300 1200">
+  <defs>
+    <linearGradient id="fondoV" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff2d78"/>
+      <stop offset="100%" stop-color="#c0125a"/>
+    </linearGradient>
+  </defs>
+  <rect width="300" height="1200" fill="url(#fondoV)"/>
+  <circle cx="150" cy="360" r="120" fill="#ffffff" opacity="0.95"/>
+  <path d="M110 380 L150 620 L190 380 Z" fill="#f4c542"/>
+  <circle cx="150" cy="330" r="70" fill="#ffe9b3"/>
+  <circle cx="120" cy="300" r="34" fill="#ffdca8"/>
+  <circle cx="180" cy="300" r="34" fill="#ffdca8"/>
+  <text x="150" y="760" font-family="Arial, sans-serif" font-weight="900" font-size="72" fill="white" text-anchor="middle">GRIDO</text>
+  <text x="150" y="820" font-family="Arial, sans-serif" font-size="30" fill="white" opacity="0.9" text-anchor="middle">helados</text>
+  <rect x="40" y="900" width="220" height="4" fill="white" opacity="0.6"/>
+  <text x="150" y="960" font-family="Arial, sans-serif" font-size="24" fill="white" opacity="0.85" text-anchor="middle">Nueva temporada</text>
+</svg>

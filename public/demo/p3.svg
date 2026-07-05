@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="933" viewBox="0 0 1400 933">
+  <defs>
+    <linearGradient id="techo3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a4048"/>
+      <stop offset="100%" stop-color="#20242a"/>
+    </linearGradient>
+    <linearGradient id="piso3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d8cfc2"/>
+      <stop offset="100%" stop-color="#a89b87"/>
+    </linearGradient>
+  </defs>
+  <rect width="1400" height="933" fill="#efe9e0"/>
+  <rect width="1400" height="360" fill="url(#techo3)"/>
+  <rect y="640" width="1400" height="293" fill="url(#piso3)"/>
+  <g opacity="0.5" stroke="#8a7c68" stroke-width="2">
+    <line x1="0" y1="720" x2="1400" y2="720"/>
+    <line x1="0" y1="800" x2="1400" y2="800"/>
+    <line x1="180" y1="640" x2="90" y2="933"/>
+    <line x1="520" y1="640" x2="480" y2="933"/>
+    <line x1="880" y1="640" x2="920" y2="933"/>
+    <line x1="1220" y1="640" x2="1310" y2="933"/>
+  </g>
+  <g fill="#ffdca8" opacity="0.85">
+    <circle cx="250" cy="120" r="34"/>
+    <circle cx="700" cy="100" r="38"/>
+    <circle cx="1150" cy="120" r="34"/>
+  </g>
+  <rect x="0" y="360" width="1400" height="600" fill="none"/>
+  <rect x="990" y="360" width="230" height="573" fill="#c9beac"/>
+  <polygon points="770,205 924,224 917,840 763,822" fill="#e2e2e2" stroke="#8a8d92" stroke-width="4" stroke-dasharray="10 8"/>
+  <text x="843" y="530" font-family="Arial, sans-serif" font-size="26" fill="#8a8d92" text-anchor="middle" transform="rotate(90 843 530)">SOPORTE S3</text>
+  <text x="40" y="895" font-family="Arial, sans-serif" font-size="30" fill="#5a5548" opacity="0.7">Plaza de comidas — foto de referencia (demo)</text>
+</svg>

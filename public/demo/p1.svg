@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <defs>
+    <linearGradient id="techo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a4048"/>
+      <stop offset="100%" stop-color="#20242a"/>
+    </linearGradient>
+    <linearGradient id="piso" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c9ccd1"/>
+      <stop offset="100%" stop-color="#9a9ea5"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="#e7e9ec"/>
+  <rect width="1200" height="380" fill="url(#techo)"/>
+  <rect y="620" width="1200" height="280" fill="url(#piso)"/>
+  <g opacity="0.5" stroke="#6c7076" stroke-width="2">
+    <line x1="0" y1="700" x2="1200" y2="700"/>
+    <line x1="0" y1="780" x2="1200" y2="780"/>
+    <line x1="150" y1="620" x2="60" y2="900"/>
+    <line x1="450" y1="620" x2="420" y2="900"/>
+    <line x1="750" y1="620" x2="780" y2="900"/>
+    <line x1="1050" y1="620" x2="1140" y2="900"/>
+  </g>
+  <g fill="#ffe9b3" opacity="0.85">
+    <ellipse cx="220" cy="120" rx="70" ry="22"/>
+    <ellipse cx="600" cy="90" rx="80" ry="24"/>
+    <ellipse cx="980" cy="120" rx="70" ry="22"/>
+  </g>
+  <rect x="60" y="380" width="120" height="420" fill="#b7bcc3"/>
+  <rect x="1020" y="380" width="120" height="420" fill="#b7bcc3"/>
+  <polygon points="816,162 960,189 960,792 816,765" fill="#e2e2e2" stroke="#8a8d92" stroke-width="4" stroke-dasharray="10 8"/>
+  <text x="888" y="480" font-family="Arial, sans-serif" font-size="26" fill="#8a8d92" text-anchor="middle" transform="rotate(90 888 480)">SOPORTE S1</text>
+  <text x="40" y="860" font-family="Arial, sans-serif" font-size="30" fill="#5a5e64" opacity="0.7">Atrio de entrada — foto de referencia (demo)</text>
+</svg>
