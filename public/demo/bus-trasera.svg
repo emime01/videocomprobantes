@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <defs>
+    <linearGradient id="cielo3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8fb7d6"/>
+      <stop offset="100%" stop-color="#cfe0ec"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#cielo3)"/>
+  <rect y="640" width="1200" height="260" fill="#6b6f75"/>
+  <!-- cuerpo trasero -->
+  <rect x="330" y="200" width="540" height="460" rx="26" fill="#e9edf1" stroke="#b7bcc3" stroke-width="4"/>
+  <rect x="330" y="210" width="540" height="60" rx="20" fill="#d23b3b"/>
+  <!-- luneta -->
+  <rect x="380" y="300" width="440" height="120" rx="12" fill="#2a3138" opacity="0.8"/>
+  <!-- panel trasero publicitario (soporte) -->
+  <polygon points="380,450 820,450 820,590 380,590" fill="#e2e2e2" stroke="#8a8d92" stroke-width="4" stroke-dasharray="10 8"/>
+  <text x="600" y="530" font-family="Arial, sans-serif" font-size="26" fill="#8a8d92" text-anchor="middle">SOPORTE TRASERO</text>
+  <!-- luces -->
+  <rect x="350" y="470" width="20" height="90" rx="6" fill="#c0392b"/>
+  <rect x="830" y="470" width="20" height="90" rx="6" fill="#c0392b"/>
+  <text x="40" y="860" font-family="Arial, sans-serif" font-size="30" fill="#e8ecef" opacity="0.85">Bus — trasera (demo)</text>
+</svg>

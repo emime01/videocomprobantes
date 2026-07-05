@@ -26,6 +26,7 @@ function FileButton({ children, accept = 'image/*', onFile, ...props }) {
 export default function PanelEditor({
   shopping,
   punto,
+  onEditarRecorrido,
   clientes,
   clienteActivoId,
   soporteSeleccionado,
@@ -58,10 +59,35 @@ export default function PanelEditor({
   onRestablecerDemo,
 }) {
   const [nombreClienteNuevo, setNombreClienteNuevo] = useState('');
-  const hotspot = hotspotSeleccionado != null ? punto.hotspots[hotspotSeleccionado] : null;
+  const hotspot = punto && hotspotSeleccionado != null ? punto.hotspots[hotspotSeleccionado] : null;
 
   return (
     <aside className="panel-editor">
+      <section className="panel-seccion">
+        <h3>Recorrido</h3>
+        <div className="panel-campos">
+          <label>
+            Nombre
+            <input
+              type="text"
+              value={shopping.nombre}
+              onChange={(e) => onEditarRecorrido({ nombre: e.target.value })}
+            />
+          </label>
+          <label>
+            Categoría
+            <input
+              type="text"
+              placeholder="Shoppings, Buses…"
+              value={shopping.categoria || ''}
+              onChange={(e) => onEditarRecorrido({ categoria: e.target.value })}
+            />
+          </label>
+        </div>
+      </section>
+
+      {punto && (
+      <>
       <section className="panel-seccion">
         <h3>Soporte</h3>
         {soporteSeleccionado ? (
@@ -153,6 +179,8 @@ export default function PanelEditor({
           + Hotspot
         </button>
       </section>
+      </>
+      )}
 
       <section className="panel-seccion">
         <h3>Puntos del recorrido</h3>
@@ -284,7 +312,7 @@ export default function PanelEditor({
           backup o pasarlo a otra máquina.
         </p>
         <button type="button" className="btn-peligro" onClick={onRestablecerDemo}>
-          Restablecer al demo
+          Descartar cambios guardados
         </button>
       </section>
     </aside>

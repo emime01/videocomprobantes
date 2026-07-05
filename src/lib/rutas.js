@@ -12,18 +12,36 @@ export function resolverUrl(u) {
   return u;
 }
 
-// URL del visor público para un cliente, absoluta y con la base correcta.
-export function linkCliente(clienteId) {
-  return `${window.location.origin}${BASE}?cliente=${clienteId}`;
+// Ruteo por hash (funciona en GitHub Pages sin rewrites de servidor):
+//   #/                       -> home (lista de recorridos)
+//   #/{recorridoId}          -> visor de ese recorrido
+//   #/{recorridoId}/editor   -> editor de ese recorrido
+// El cliente para el visor viaja como query (?cliente=slug).
+export function parseRuta() {
+  const clienteId = new URLSearchParams(window.location.search).get('cliente');
+  const partes = window.location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+  if (partes.length === 0) return { vista: 'home', clienteId };
+  const recorridoId = partes[0];
+  const vista = partes[1] === 'editor' ? 'editor' : 'visor';
+  return { vista, recorridoId, clienteId };
 }
 
-// True si la URL actual corresponde al editor. Soporta tanto la ruta real
-// (/editor, que sirve Vercel con su SPA fallback) como el hash (#/editor),
-// que es lo que funciona en GitHub Pages sin rewrites de servidor.
-export function esRutaEditor() {
-  const path = window.location.pathname.replace(/\/+$/, '');
-  const hash = window.location.hash.replace(/^#\/?/, '');
-  return path.endsWith('/editor') || hash === 'editor';
+export function irA(hashPath) {
+  // hashPath sin el '#', p.ej. '/demo-shopping' o '/demo-shopping/editor' o '/'
+  window.location.hash = hashPath;
+}
+
+export function linkVisor(recorridoId) {
+  return `#/${recorridoId}`;
+}
+
+export function linkEditor(recorridoId) {
+  return `#/${recorridoId}/editor`;
+}
+
+// Link público absoluto de un cliente para un recorrido (para "copiar link").
+export function linkCliente(recorridoId, clienteId) {
+  return `${window.location.origin}${BASE}?cliente=${clienteId}#/${recorridoId}`;
 }
 
 export { BASE };

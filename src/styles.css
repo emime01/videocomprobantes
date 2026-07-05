@@ -68,12 +68,48 @@ button {
   height: auto;
   object-fit: contain;
   user-select: none;
-  transition: opacity 200ms ease;
-  opacity: 1;
 }
 
-.visor-foto-fade {
+/* Transición de "avance": la foto actual hace un leve zoom hacia adelante y se
+   desvanece; la nueva entra desde un poco más atrás. Da sensación de caminar. */
+.visor-foto-saliendo {
+  animation: avanzar-salir 220ms ease-in forwards;
+}
+
+.visor-foto-entrando {
+  animation: avanzar-entrar 260ms ease-out both;
+}
+
+@keyframes avanzar-salir {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(1.12); }
+}
+
+@keyframes avanzar-entrar {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Los soportes/hotspots acompañan: se ocultan mientras la foto avanza y
+   reaparecen con la nueva parada. */
+.visor-overlay-saliendo {
   opacity: 0;
+  transition: opacity 180ms ease-in;
+}
+
+.visor-overlay-entrando {
+  animation: avanzar-entrar 260ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visor-foto-saliendo,
+  .visor-foto-entrando,
+  .visor-overlay-saliendo,
+  .visor-overlay-entrando {
+    animation: none;
+    transition: opacity 150ms ease;
+  }
+  .visor-foto-saliendo { opacity: 0; }
 }
 
 .visor-stage {
@@ -481,4 +517,129 @@ button {
     border-left: none;
     border-top: 1px solid var(--borde);
   }
+}
+
+/* ── Home (lista de recorridos) ──────────────────────────────────────── */
+
+.home {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 18px 60px;
+}
+
+.home-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.home-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.home-marca {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+}
+
+.home-grupo {
+  margin-bottom: 24px;
+}
+
+.home-grupo h2 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+  margin: 0 0 10px;
+}
+
+.home-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.home-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.home-item-nombre {
+  color: var(--texto);
+  text-decoration: none;
+  font-size: 1.05rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.home-item-nombre:hover {
+  color: var(--naranja);
+}
+
+.home-item-editar {
+  color: var(--naranja);
+  text-decoration: none;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.home-nuevo {
+  margin-top: 32px;
+  border-top: 1px solid var(--borde);
+  padding-top: 20px;
+}
+
+.home-nuevo h2 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+  margin: 0 0 10px;
+}
+
+.home-nuevo-campos {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.home-nuevo-campos input {
+  flex: 1;
+  min-width: 160px;
+  background: #1c1f24;
+  border: 1px solid var(--borde);
+  color: var(--texto);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
+
+/* ── Editor: inicio + estado vacío ───────────────────────────────────── */
+
+.editor-inicio {
+  background: transparent;
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  color: var(--texto);
+}
+
+.editor-vacio {
+  text-align: center;
+  padding: 40px 20px;
+  opacity: 0.85;
 }
