@@ -4,9 +4,9 @@ import Hotspot from './Hotspot';
 
 export default function Visor({ shopping, clienteId }) {
   const [puntoId, setPuntoId] = useState(shopping.puntos[0]?.id);
-  const [size, setSize] = useState({ w: 0, h: 0 });
+  const [box, setBox] = useState({ w: 0, h: 0, left: 0, top: 0 });
   const [fading, setFading] = useState(false);
-  const stageRef = useRef(null);
+  const imgRef = useRef(null);
 
   const punto = useMemo(
     () => shopping.puntos.find((p) => p.id === puntoId),
@@ -14,16 +14,20 @@ export default function Visor({ shopping, clienteId }) {
   );
   const cliente = clienteId ? shopping.clientesDemo?.[clienteId] : null;
 
+  // La foto puede quedar con letterbox dentro del stage (aspect ratio propia).
+  // Medimos la caja realmente renderizada de la <img> para que los porcentajes
+  // de esquinas/hotspots se ubiquen sobre la foto y no sobre el contenedor.
   useEffect(() => {
-    const el = stageRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect;
-      setSize({ w: width, h: height });
-    });
-    ro.observe(el);
+    const img = imgRef.current;
+    if (!img) return;
+    function medir() {
+      setBox({ w: img.offsetWidth, h: img.offsetHeight, left: img.offsetLeft, top: img.offsetTop });
+    }
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(img);
     return () => ro.disconnect();
-  }, []);
+  }, [punto?.id]);
 
   // Precarga las fotos de los puntos vecinos.
   useEffect(() => {
@@ -46,19 +50,25 @@ export default function Visor({ shopping, clienteId }) {
 
   return (
     <div className="visor">
-      <div className="visor-stage" ref={stageRef}>
+      <div className="visor-stage">
         <img
+          ref={imgRef}
           src={punto.foto}
           alt={punto.nombre}
           className={`visor-foto ${fading ? 'visor-foto-fade' : ''}`}
           draggable={false}
         />
-        {punto.soportes.map((s) => (
-          <ZonaSoporte key={s.id} soporte={s} size={size} arteUrl={cliente?.artes?.[s.id]} />
-        ))}
-        {punto.hotspots?.map((h, i) => (
-          <Hotspot key={`${punto.id}-${i}`} hotspot={h} onClick={() => irA(h.to)} />
-        ))}
+        <div
+          className="visor-overlay-capa"
+          style={{ left: box.left, top: box.top, width: box.w, height: box.h }}
+        >
+          {punto.soportes.map((s) => (
+            <ZonaSoporte key={s.id} soporte={s} size={box} arteUrl={cliente?.artes?.[s.id]} />
+          ))}
+          {punto.hotspots?.map((h, i) => (
+            <Hotspot key={`${punto.id}-${i}`} hotspot={h} onClick={() => irA(h.to)} />
+          ))}
+        </div>
         <div className="visor-marca">MOVIMAGEN</div>
       </div>
 
