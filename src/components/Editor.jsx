@@ -3,6 +3,7 @@ import ZonaSoporte from './ZonaSoporte';
 import Hotspot from './Hotspot';
 import PanelEditor from './PanelEditor';
 import { comprimirArte, comprimirFoto, genId, slugify } from '../lib/imagenes';
+import { BASE, linkCliente, resolverUrl } from '../lib/rutas';
 
 function configDemoAClientes(config) {
   return Object.entries(config.clientesDemo || {}).map(([id, c]) => ({
@@ -29,7 +30,7 @@ export default function Editor() {
   const draggingRef = useRef(null);
 
   useEffect(() => {
-    fetch('/config.demo.json')
+    fetch(`${BASE}config.demo.json`)
       .then((r) => {
         if (!r.ok) throw new Error('No se pudo cargar la configuración del recorrido');
         return r.json();
@@ -264,7 +265,7 @@ export default function Editor() {
   }
 
   function copiarLink(clienteId) {
-    const url = `${window.location.origin}/?cliente=${clienteId}`;
+    const url = linkCliente(clienteId);
     navigator.clipboard?.writeText(url);
     return url;
   }
@@ -316,7 +317,7 @@ export default function Editor() {
         <div className="editor-topbar">
           <strong>{shopping.nombre}</strong>
           <span className="editor-topbar-nota">Editor — cambios en memoria, exportá el JSON para guardarlos</span>
-          <a href="/" className="editor-volver">Ver como público ↗</a>
+          <a href={BASE} className="editor-volver">Ver como público ↗</a>
         </div>
 
         <nav className="visor-paradas">
@@ -335,7 +336,7 @@ export default function Editor() {
         <div className="editor-stage">
           <img
             ref={imgRef}
-            src={punto.foto}
+            src={resolverUrl(punto.foto)}
             alt={punto.nombre}
             className="visor-foto"
             draggable={false}
@@ -362,7 +363,7 @@ export default function Editor() {
                 key={s.id}
                 soporte={s}
                 size={box}
-                arteUrl={clienteActivo?.artes?.[s.id]}
+                arteUrl={resolverUrl(clienteActivo?.artes?.[s.id])}
                 mostrarLuz={mostrarLuz}
                 editable
                 seleccionado={s.id === soporteSeleccionadoId}
