@@ -1,0 +1,166 @@
+{
+  "recorridos": [
+    {
+      "id": "demo-shopping",
+      "nombre": "Demo Shopping",
+      "categoria": "Shoppings",
+      "puntos": [
+        {
+          "id": "p1",
+          "nombre": "Atrio de entrada",
+          "foto": "/demo/p1.svg",
+          "hotspots": [
+            { "to": "p2", "x": 50, "y": 70, "label": "Pasillo central" }
+          ],
+          "soportes": [
+            {
+              "id": "s1",
+              "nombre": "Columna LED · Atrio",
+              "orientacion": "v",
+              "esquinas": [
+                { "x": 68, "y": 18 },
+                { "x": 80, "y": 21 },
+                { "x": 80, "y": 88 },
+                { "x": 68, "y": 85 }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "p2",
+          "nombre": "Pasillo central",
+          "foto": "/demo/p2.svg",
+          "hotspots": [
+            { "to": "p1", "x": 8, "y": 60, "label": "Atrio de entrada" },
+            { "to": "p3", "x": 90, "y": 62, "label": "Plaza de comidas" }
+          ],
+          "soportes": [
+            {
+              "id": "s2",
+              "nombre": "Banner colgante · Pasillo",
+              "orientacion": "h",
+              "esquinas": [
+                { "x": 30, "y": 12 },
+                { "x": 70, "y": 10 },
+                { "x": 72, "y": 30 },
+                { "x": 28, "y": 32 }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "p3",
+          "nombre": "Plaza de comidas",
+          "foto": "/demo/p3.svg",
+          "hotspots": [
+            { "to": "p2", "x": 12, "y": 62, "label": "Pasillo central" }
+          ],
+          "soportes": [
+            {
+              "id": "s3",
+              "nombre": "Columna · Plaza de comidas",
+              "orientacion": "v",
+              "esquinas": [
+                { "x": 55, "y": 22 },
+                { "x": 66, "y": 24 },
+                { "x": 65.5, "y": 90 },
+                { "x": 54.5, "y": 88 }
+              ]
+            }
+          ]
+        }
+      ],
+      "clientesDemo": {
+        "grido": {
+          "nombre": "Grido",
+          "artes": {
+            "s1": "/demo/arte-grido-v.svg",
+            "s2": "/demo/arte-grido-h.svg",
+            "s3": "/demo/arte-grido-v.svg"
+          }
+        }
+      }
+    },
+    {
+      "id": "demo-bus",
+      "nombre": "Bus · Línea 405",
+      "categoria": "Buses",
+      "puntos": [
+        {
+          "id": "b1",
+          "nombre": "Frente",
+          "foto": "/demo/bus-frente.svg",
+          "hotspots": [
+            { "to": "b2", "x": 88, "y": 55, "label": "Lateral" }
+          ],
+          "soportes": [
+            {
+              "id": "bs1",
+              "nombre": "Panel frontal",
+              "orientacion": "h",
+              "esquinas": [
+                { "x": 33.5, "y": 55.5 },
+                { "x": 66.5, "y": 55.5 },
+                { "x": 66.5, "y": 66.5 },
+                { "x": 33.5, "y": 66.5 }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "b2",
+          "nombre": "Lateral",
+          "foto": "/demo/bus-lateral.svg",
+          "hotspots": [
+            { "to": "b1", "x": 8, "y": 55, "label": "Frente" },
+            { "to": "b3", "x": 92, "y": 55, "label": "Trasera" }
+          ],
+          "soportes": [
+            {
+              "id": "bs2",
+              "nombre": "Lateral completo",
+              "orientacion": "h",
+              "esquinas": [
+                { "x": 22.5, "y": 37.5 },
+                { "x": 70, "y": 37.5 },
+                { "x": 70, "y": 65 },
+                { "x": 22.5, "y": 65 }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "b3",
+          "nombre": "Trasera",
+          "foto": "/demo/bus-trasera.svg",
+          "hotspots": [
+            { "to": "b2", "x": 10, "y": 55, "label": "Lateral" }
+          ],
+          "soportes": [
+            {
+              "id": "bs3",
+              "nombre": "Panel trasero",
+              "orientacion": "h",
+              "esquinas": [
+                { "x": 31.7, "y": 50 },
+                { "x": 68.3, "y": 50 },
+                { "x": 68.3, "y": 65.5 },
+                { "x": 31.7, "y": 65.5 }
+              ]
+            }
+          ]
+        }
+      ],
+      "clientesDemo": {
+        "grido": {
+          "nombre": "Grido",
+          "artes": {
+            "bs1": "/demo/arte-grido-h.svg",
+            "bs2": "/demo/arte-grido-h.svg",
+            "bs3": "/demo/arte-grido-h.svg"
+          }
+        }
+      }
+    }
+  ]
+}

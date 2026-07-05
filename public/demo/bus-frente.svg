@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+  <defs>
+    <linearGradient id="cielo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8fb7d6"/>
+      <stop offset="100%" stop-color="#cfe0ec"/>
+    </linearGradient>
+  </defs>
+  <rect width="1400" height="900" fill="url(#cielo)"/>
+  <rect y="640" width="1400" height="260" fill="#6b6f75"/>
+  <rect y="640" width="1400" height="10" fill="#565a60"/>
+  <!-- cuerpo del bus, de frente/tres cuartos -->
+  <rect x="420" y="220" width="560" height="440" rx="26" fill="#e9edf1" stroke="#b7bcc3" stroke-width="4"/>
+  <rect x="420" y="230" width="560" height="70" rx="20" fill="#d23b3b"/>
+  <!-- parabrisas -->
+  <rect x="470" y="320" width="460" height="150" rx="14" fill="#2a3138" opacity="0.85"/>
+  <!-- panel frontal publicitario (soporte) -->
+  <polygon points="470,500 930,500 930,600 470,600" fill="#e2e2e2" stroke="#8a8d92" stroke-width="4" stroke-dasharray="10 8"/>
+  <text x="700" y="560" font-family="Arial, sans-serif" font-size="26" fill="#8a8d92" text-anchor="middle">SOPORTE FRONTAL</text>
+  <!-- ruedas -->
+  <circle cx="540" cy="660" r="42" fill="#22262b"/>
+  <circle cx="860" cy="660" r="42" fill="#22262b"/>
+  <circle cx="540" cy="660" r="18" fill="#5a5e64"/>
+  <circle cx="860" cy="660" r="18" fill="#5a5e64"/>
+  <text x="40" y="860" font-family="Arial, sans-serif" font-size="30" fill="#e8ecef" opacity="0.85">Bus — frente (demo)</text>
+</svg>

@@ -1,12 +1,13 @@
 # Recorrido Virtual Comercial · Movimagen
 
-Recorrido virtual foto a foto de un shopping, con los artes de cada anunciante montados en perspectiva sobre las fotos reales. Ver especificación completa en [`SPEC.md`](./SPEC.md).
+Recorrido virtual foto a foto, con los artes de cada anunciante montados en perspectiva sobre las fotos reales. Sirve tanto para un **shopping** (caminás las paradas) como para un **bus** (girás alrededor: frente → lateral → trasera) o cualquier otro medio. Ver especificación en [`SPEC.md`](./SPEC.md).
 
 ## Estado
 
-**Fase 1 — Visor con datos locales.** El visor lee `/public/config.demo.json` (sin Supabase todavía) y muestra un recorrido demo de 3 puntos con los artes de un cliente de prueba montados en perspectiva.
-
-**Fase 2 — Editor local.** El editor (`/editor`) trabaja en memoria: calibración de soportes arrastrando esquinas, hotspots editables, alta/baja/reorden de puntos subiendo su foto, alta de clientes y artes por soporte, zoom 2x para calibrar fino, y export/import del JSON completo como backup manual.
+- **Home con varios recorridos agrupados por categoría** (Shoppings, Buses, etc.). Cada recorrido es independiente y usa el mismo motor.
+- **Visor** por recorrido, con transición de "avance" (zoom + desvanecido) entre fotos para dar sensación de movimiento.
+- **Editor** por recorrido: calibración de soportes arrastrando esquinas, hotspots, puntos (subir/reemplazar foto), clientes y artes, nombre y categoría del recorrido, zoom 2x, export/import JSON.
+- **Guardado en el navegador** (`localStorage`), con botón Guardar e indicador de estado. Sin Supabase todavía (Fase 3).
 
 ## Desarrollo local
 
@@ -15,31 +16,39 @@ npm install
 npm run dev
 ```
 
-- `http://localhost:5173/?cliente=grido` — visor público con los artes de "Grido" montados en los soportes. Sin `?cliente`, los soportes se muestran vacíos ("Espacio disponible").
-- `http://localhost:5173/editor` — editor visual. Los cambios viven en memoria; usá "Exportar JSON" para guardarlos y "Importar JSON" para retomarlos.
+Rutas (por hash, para que funcionen igual en GitHub Pages):
+
+- `/` — home con la lista de recorridos agrupados.
+- `/#/{recorridoId}` — visor público. Con `?cliente=slug` muestra los artes de ese cliente; sin él, los soportes van vacíos ("Espacio disponible"). Ej: `/?cliente=grido#/demo-shopping`.
+- `/#/{recorridoId}/editor` — editor visual del recorrido.
+
+Recorridos demo incluidos: `demo-shopping` (categoría Shoppings) y `demo-bus` (categoría Buses).
+
+## Datos
+
+- El catálogo semilla vive en [`public/catalogo.json`](./public/catalogo.json): un arreglo de recorridos, cada uno con `id`, `nombre`, `categoria`, `puntos[]` y (para el demo) `clientesDemo`.
+- Lo que editás o creás se guarda en `localStorage` bajo `recorrido:{id}` y **pisa** la semilla en tu navegador. La home lista la unión de ambos.
+- Las fotos/artes de `public/demo/` son placeholders SVG (no hay fotos reales todavía).
 
 ## Preview en vivo (GitHub Pages)
 
-Cada push a `main` publica la app automáticamente vía GitHub Actions (workflow `.github/workflows/deploy-pages.yml`). **Activación por única vez:** en el repo, `Settings → Pages → Build and deployment → Source: GitHub Actions`. Después de eso, cada push queda publicado solo.
+Cada push a `main` publica la app vía GitHub Actions (`.github/workflows/deploy-pages.yml`). **Activación por única vez:** `Settings → Pages → Build and deployment → Source: GitHub Actions`.
 
-URL pública una vez activado:
+- Home: `https://emime01.github.io/videocomprobantes/`
+- Visor: `https://emime01.github.io/videocomprobantes/?cliente=grido#/demo-shopping`
+- Editor: `https://emime01.github.io/videocomprobantes/#/demo-shopping/editor`
 
-- Visor: `https://emime01.github.io/videocomprobantes/?cliente=grido`
-- Editor: `https://emime01.github.io/videocomprobantes/#/editor`
+> En Pages la app vive bajo el subpath `/videocomprobantes/` y se rutea por **hash** (`#/...`), que funciona sin rewrites de servidor. En el deploy definitivo de Vercel (Fase 3/4) se pueden usar rutas reales.
 
-> En Pages la app vive bajo el subpath `/videocomprobantes/`, así que el editor se abre con **hash** (`#/editor`) en vez de `/editor`. En dev local y en el deploy definitivo de Vercel (Fase 4) sigue funcionando `/editor` normal.
+## Guardado y su alcance
 
-## Guardado (Fase 2)
+El botón **Guardar** persiste el recorrido en el **navegador**. Los cambios sobreviven al recargar y el visor de ese mismo navegador los muestra (incluido `?cliente=`).
 
-El editor tiene un botón **Guardar** que persiste el config en el **navegador** (`localStorage`), con indicador de estado (Guardado ✓ / Cambios sin guardar). Los cambios sobreviven al recargar, y el visor de **ese mismo navegador** los muestra (incluido el link `?cliente=`).
-
-- **Alcance:** es por navegador/dispositivo. Si le mandás el link a un cliente en su celular, ve el demo, no tus cambios — el guardado compartido llega con Supabase en la **Fase 3**.
-- **Backup / traspaso:** usá **Exportar JSON** para guardar un respaldo o pasar el trabajo a otra máquina (**Importar JSON**).
-- **Restablecer al demo:** en la sección Backup del panel, borra lo guardado en el navegador y vuelve al `config.demo.json` original.
-- Si los artes/fotos pesan mucho, `localStorage` puede llenarse; en ese caso el indicador avisa y conviene usar Exportar JSON.
+- **Alcance:** es por navegador/dispositivo. Si le mandás el link a un cliente en su celular, ve el demo, no tus cambios — el guardado compartido llega con **Supabase (Fase 3)**.
+- **Backup / traspaso:** **Exportar JSON** guarda un respaldo; **Importar JSON** lo retoma en otra máquina.
+- **Descartar cambios:** en la sección Backup del panel, borra lo guardado de ese recorrido en el navegador y vuelve a la semilla.
+- Si los artes/fotos pesan mucho, `localStorage` puede llenarse; el indicador avisa y conviene usar Exportar JSON.
 
 ## Notas
 
-- Las fotos y artes de `/public/demo/` son placeholders SVG (no hay fotos reales del shopping todavía).
-- El bloque `clientesDemo` dentro de `config.demo.json` (Fase 1) y el arreglo `clientes` que exporta/importa el editor (Fase 2) son atajos temporales para trabajar sin Supabase; en la Fase 3 se reemplazan por las tablas `clientes`/`artes` (sección 4.2 de `SPEC.md`).
-- La ruta `/editor` todavía no pide `ADMIN_KEY` (eso llega con las funciones serverless de la Fase 3); por ahora es una herramienta de trabajo local, sin persistencia remota.
+- Todavía no pide `ADMIN_KEY` (eso llega con las funciones serverless de la Fase 3); por ahora es una herramienta de trabajo local, sin persistencia remota compartida.

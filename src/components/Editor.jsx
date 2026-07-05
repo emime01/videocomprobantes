@@ -3,18 +3,11 @@ import ZonaSoporte from './ZonaSoporte';
 import Hotspot from './Hotspot';
 import PanelEditor from './PanelEditor';
 import { comprimirArte, comprimirFoto, genId, slugify } from '../lib/imagenes';
-import { BASE, linkCliente, resolverUrl } from '../lib/rutas';
-import { borrarConfig, cargarConfig, guardarConfig } from '../lib/almacenamiento';
+import { linkCliente, linkVisor, resolverUrl } from '../lib/rutas';
+import { borrarConfig, guardarConfig } from '../lib/almacenamiento';
+import { cargarRecorrido } from '../lib/catalogo';
 
-function configDemoAClientes(config) {
-  return Object.entries(config.clientesDemo || {}).map(([id, c]) => ({
-    id,
-    nombre: c.nombre,
-    artes: { ...c.artes },
-  }));
-}
-
-export default function Editor() {
+export default function Editor({ recorridoId, onVolver }) {
   const [shopping, setShopping] = useState(null);
   const [clientes, setClientes] = useState([]);
   const [error, setError] = useState(null);
@@ -35,27 +28,19 @@ export default function Editor() {
   const hidratadoRef = useRef(false);
 
   useEffect(() => {
-    // Preferimos lo guardado en este navegador; si no hay, el demo estático.
-    const guardado = cargarConfig();
-    if (guardado) {
-      setShopping(guardado.shopping);
-      setClientes(guardado.clientes);
-      setPuntoActualId(guardado.shopping.puntos?.[0]?.id || null);
-      return;
-    }
-    fetch(`${BASE}config.demo.json`)
-      .then((r) => {
-        if (!r.ok) throw new Error('No se pudo cargar la configuración del recorrido');
-        return r.json();
-      })
-      .then((config) => {
-        const { clientesDemo, ...limpio } = config;
-        setShopping(limpio);
-        setClientes(configDemoAClientes(config));
-        setPuntoActualId(limpio.puntos[0]?.id || null);
+    // Preferimos lo guardado en este navegador; si no hay, la semilla del catálogo.
+    cargarRecorrido(recorridoId)
+      .then((data) => {
+        if (!data) {
+          setError(`No existe el recorrido “${recorridoId}”.`);
+          return;
+        }
+        setShopping(data.shopping);
+        setClientes(data.clientes);
+        setPuntoActualId(data.shopping.puntos?.[0]?.id || null);
       })
       .catch((e) => setError(e.message));
-  }, []);
+  }, [recorridoId]);
 
   // La primera vez que llegan los datos (hidratación) no cuenta como cambio;
   // cualquier edición posterior marca "cambios sin guardar".
@@ -75,9 +60,13 @@ export default function Editor() {
   }
 
   function restablecerDemo() {
-    if (!window.confirm('¿Descartar los cambios guardados en este navegador y volver al demo?')) return;
-    borrarConfig();
+    if (!window.confirm('¿Descartar los cambios guardados en este navegador para este recorrido?')) return;
+    borrarConfig(recorridoId);
     window.location.reload();
+  }
+
+  function editarRecorrido(cambios) {
+    setShopping((prev) => ({ ...prev, ...cambios }));
   }
 
   const punto = useMemo(
@@ -301,7 +290,7 @@ export default function Editor() {
   }
 
   function copiarLink(clienteId) {
-    const url = linkCliente(clienteId);
+    const url = linkCliente(recorridoId, clienteId);
     navigator.clipboard?.writeText(url);
     return url;
   }
@@ -336,8 +325,13 @@ export default function Editor() {
     reader.readAsText(file);
   }
 
-  if (error) return <div className="estado estado-error">{error}</div>;
-  if (!shopping || !punto) return <div className="estado">Cargando…</div>;
+  if (error)
+    return (
+      <div className="estado estado-error">
+        {error} <a href="#/">Volver al inicio</a>
+      </div>
+    );
+  if (!shopping) return <div className="estado">Cargando…</div>;
 
   const centroide = soporteSeleccionado
     ? {
@@ -351,6 +345,7 @@ export default function Editor() {
     <div className="editor">
       <div className="editor-principal">
         <div className="editor-topbar">
+          <button type="button" className="editor-inicio" onClick={onVolver}>← Inicio</button>
           <strong>{shopping.nombre}</strong>
           <button
             type="button"
@@ -367,7 +362,7 @@ export default function Editor() {
               'No entró en el navegador (demasiado peso). Usá Exportar JSON.'}
             {estadoGuardado === 'error' && 'No se pudo guardar'}
           </span>
-          <a href={BASE} className="editor-volver">Ver como público ↗</a>
+          <a href={linkVisor(recorridoId)} className="editor-volver">Ver como público ↗</a>
         </div>
 
         <nav className="visor-paradas">
@@ -384,6 +379,13 @@ export default function Editor() {
         </nav>
 
         <div className="editor-stage">
+          {!punto ? (
+            <div className="editor-vacio">
+              <p>Este recorrido todavía no tiene fotos.</p>
+              <p className="panel-hint">Usá “+ Punto (subir foto)” en el panel para agregar la primera parada.</p>
+            </div>
+          ) : (
+          <>
           <img
             ref={imgRef}
             src={resolverUrl(punto.foto)}
@@ -438,12 +440,15 @@ export default function Editor() {
               />
             ))}
           </div>
+          </>
+          )}
         </div>
       </div>
 
       <PanelEditor
         shopping={shopping}
         punto={punto}
+        onEditarRecorrido={editarRecorrido}
         clientes={clientes}
         clienteActivoId={clienteActivoId}
         soporteSeleccionado={soporteSeleccionado}

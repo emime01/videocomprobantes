@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
+import Home from './components/Home';
 import Visor from './components/Visor';
 import Editor from './components/Editor';
-import { BASE, esRutaEditor } from './lib/rutas';
-import { cargarConfig } from './lib/almacenamiento';
+import { irA, parseRuta } from './lib/rutas';
+import { cargarRecorrido } from './lib/catalogo';
 
-// Convierte el arreglo de clientes guardado al mapa que consume el Visor.
+// Convierte el arreglo de clientes al mapa que consume el Visor.
 function conClientesDemo(shopping, clientes) {
   const clientesDemo = Object.fromEntries(
     clientes.map((c) => [c.id, { nombre: c.nombre, artes: c.artes || {} }])
@@ -12,41 +13,58 @@ function conClientesDemo(shopping, clientes) {
   return { ...shopping, clientesDemo };
 }
 
-export default function App() {
+function VisorRecorrido({ recorridoId, clienteId }) {
   const [shopping, setShopping] = useState(null);
-  const [error, setError] = useState(null);
-  const [esEditor, setEsEditor] = useState(esRutaEditor());
-
-  // En GitHub Pages el editor se abre con hash (#/editor); reevaluamos al cambiarlo.
-  useEffect(() => {
-    const onHash = () => setEsEditor(esRutaEditor());
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
-  }, []);
+  const [estado, setEstado] = useState('cargando'); // cargando | ok | no-encontrado | error
 
   useEffect(() => {
-    if (esEditor) return;
-    // Si el editor guardó algo en este navegador, el visor lo usa.
-    const guardado = cargarConfig();
-    if (guardado) {
-      setShopping(conClientesDemo(guardado.shopping, guardado.clientes));
-      return;
-    }
-    fetch(`${BASE}config.demo.json`)
-      .then((r) => {
-        if (!r.ok) throw new Error('No se pudo cargar la configuración del recorrido');
-        return r.json();
+    let vivo = true;
+    setEstado('cargando');
+    cargarRecorrido(recorridoId)
+      .then((data) => {
+        if (!vivo) return;
+        if (!data) {
+          setEstado('no-encontrado');
+          return;
+        }
+        setShopping(conClientesDemo(data.shopping, data.clientes));
+        setEstado('ok');
       })
-      .then(setShopping)
-      .catch((e) => setError(e.message));
-  }, [esEditor]);
+      .catch(() => vivo && setEstado('error'));
+    return () => {
+      vivo = false;
+    };
+  }, [recorridoId]);
 
-  if (esEditor) return <Editor />;
-
-  if (error) return <div className="estado estado-error">{error}</div>;
-  if (!shopping) return <div className="estado">Cargando…</div>;
-
-  const clienteId = new URLSearchParams(window.location.search).get('cliente');
+  if (estado === 'cargando') return <div className="estado">Cargando…</div>;
+  if (estado === 'no-encontrado')
+    return (
+      <div className="estado estado-error">
+        No existe el recorrido “{recorridoId}”. <a href="#/">Volver al inicio</a>
+      </div>
+    );
+  if (estado === 'error') return <div className="estado estado-error">No se pudo cargar el recorrido.</div>;
 
   return <Visor shopping={shopping} clienteId={clienteId} />;
+}
+
+export default function App() {
+  const [ruta, setRuta] = useState(parseRuta());
+
+  useEffect(() => {
+    const onNav = () => setRuta(parseRuta());
+    window.addEventListener('hashchange', onNav);
+    window.addEventListener('popstate', onNav);
+    return () => {
+      window.removeEventListener('hashchange', onNav);
+      window.removeEventListener('popstate', onNav);
+    };
+  }, []);
+
+  if (ruta.vista === 'home') return <Home />;
+  if (ruta.vista === 'editor')
+    return <Editor key={ruta.recorridoId} recorridoId={ruta.recorridoId} onVolver={() => irA('/')} />;
+  return (
+    <VisorRecorrido key={ruta.recorridoId} recorridoId={ruta.recorridoId} clienteId={ruta.clienteId} />
+  );
 }

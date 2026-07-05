@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="800" viewBox="0 0 1600 800">
+  <defs>
+    <linearGradient id="cielo2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8fb7d6"/>
+      <stop offset="100%" stop-color="#cfe0ec"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="800" fill="url(#cielo2)"/>
+  <rect y="600" width="1600" height="200" fill="#6b6f75"/>
+  <!-- cuerpo lateral del bus, alargado -->
+  <rect x="120" y="200" width="1360" height="400" rx="30" fill="#e9edf1" stroke="#b7bcc3" stroke-width="4"/>
+  <rect x="120" y="210" width="1360" height="60" rx="24" fill="#d23b3b"/>
+  <!-- ventanas -->
+  <g fill="#2a3138" opacity="0.85">
+    <rect x="170" y="300" width="150" height="110" rx="10"/>
+    <rect x="1330" y="300" width="120" height="110" rx="10"/>
+  </g>
+  <!-- puerta -->
+  <rect x="1180" y="300" width="90" height="230" rx="8" fill="#3a4148" opacity="0.85"/>
+  <!-- gran lateral publicitario (soporte) -->
+  <polygon points="360,300 1120,300 1120,520 360,520" fill="#e2e2e2" stroke="#8a8d92" stroke-width="4" stroke-dasharray="12 9"/>
+  <text x="740" y="420" font-family="Arial, sans-serif" font-size="30" fill="#8a8d92" text-anchor="middle">SOPORTE LATERAL</text>
+  <!-- ruedas -->
+  <circle cx="360" cy="600" r="48" fill="#22262b"/>
+  <circle cx="1180" cy="600" r="48" fill="#22262b"/>
+  <circle cx="360" cy="600" r="20" fill="#5a5e64"/>
+  <circle cx="1180" cy="600" r="20" fill="#5a5e64"/>
+  <text x="40" y="760" font-family="Arial, sans-serif" font-size="30" fill="#e8ecef" opacity="0.85">Bus — lateral (demo)</text>
+</svg>

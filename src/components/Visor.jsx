@@ -6,7 +6,8 @@ import { resolverUrl } from '../lib/rutas';
 export default function Visor({ shopping, clienteId }) {
   const [puntoId, setPuntoId] = useState(shopping.puntos[0]?.id);
   const [box, setBox] = useState({ w: 0, h: 0, left: 0, top: 0 });
-  const [fading, setFading] = useState(false);
+  // Transición de avance: 'idle' | 'saliendo' | 'entrando'
+  const [fase, setFase] = useState('idle');
   const imgRef = useRef(null);
 
   const punto = useMemo(
@@ -39,12 +40,13 @@ export default function Visor({ shopping, clienteId }) {
   }, [punto, shopping]);
 
   function irA(id) {
-    if (id === puntoId) return;
-    setFading(true);
+    if (id === puntoId || fase !== 'idle') return;
+    setFase('saliendo'); // la foto actual avanza hacia adelante y se desvanece
     setTimeout(() => {
       setPuntoId(id);
-      setFading(false);
-    }, 200);
+      setFase('entrando'); // la nueva entra desde un poco más atrás
+      setTimeout(() => setFase('idle'), 260);
+    }, 220);
   }
 
   if (!punto) return null;
@@ -56,11 +58,11 @@ export default function Visor({ shopping, clienteId }) {
           ref={imgRef}
           src={resolverUrl(punto.foto)}
           alt={punto.nombre}
-          className={`visor-foto ${fading ? 'visor-foto-fade' : ''}`}
+          className={`visor-foto visor-foto-${fase}`}
           draggable={false}
         />
         <div
-          className="visor-overlay-capa"
+          className={`visor-overlay-capa visor-overlay-${fase}`}
           style={{ left: box.left, top: box.top, width: box.w, height: box.h }}
         >
           {punto.soportes.map((s) => (
