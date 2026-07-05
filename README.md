@@ -29,6 +29,15 @@ URL pública una vez activado:
 
 > En Pages la app vive bajo el subpath `/videocomprobantes/`, así que el editor se abre con **hash** (`#/editor`) en vez de `/editor`. En dev local y en el deploy definitivo de Vercel (Fase 4) sigue funcionando `/editor` normal.
 
+## Guardado (Fase 2)
+
+El editor tiene un botón **Guardar** que persiste el config en el **navegador** (`localStorage`), con indicador de estado (Guardado ✓ / Cambios sin guardar). Los cambios sobreviven al recargar, y el visor de **ese mismo navegador** los muestra (incluido el link `?cliente=`).
+
+- **Alcance:** es por navegador/dispositivo. Si le mandás el link a un cliente en su celular, ve el demo, no tus cambios — el guardado compartido llega con Supabase en la **Fase 3**.
+- **Backup / traspaso:** usá **Exportar JSON** para guardar un respaldo o pasar el trabajo a otra máquina (**Importar JSON**).
+- **Restablecer al demo:** en la sección Backup del panel, borra lo guardado en el navegador y vuelve al `config.demo.json` original.
+- Si los artes/fotos pesan mucho, `localStorage` puede llenarse; en ese caso el indicador avisa y conviene usar Exportar JSON.
+
 ## Notas
 
 - Las fotos y artes de `/public/demo/` son placeholders SVG (no hay fotos reales del shopping todavía).

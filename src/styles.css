@@ -231,6 +231,23 @@ button {
   font-size: 0.75rem;
 }
 
+.editor-estado {
+  font-size: 0.75rem;
+}
+
+.editor-estado-guardado {
+  opacity: 0.55;
+}
+
+.editor-estado-sin-guardar {
+  color: var(--naranja);
+}
+
+.editor-estado-error-quota,
+.editor-estado-error {
+  color: #ff8a80;
+}
+
 .editor-volver {
   margin-left: auto;
   color: var(--naranja);
