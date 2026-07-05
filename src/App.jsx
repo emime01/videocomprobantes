@@ -2,6 +2,15 @@ import { useEffect, useState } from 'react';
 import Visor from './components/Visor';
 import Editor from './components/Editor';
 import { BASE, esRutaEditor } from './lib/rutas';
+import { cargarConfig } from './lib/almacenamiento';
+
+// Convierte el arreglo de clientes guardado al mapa que consume el Visor.
+function conClientesDemo(shopping, clientes) {
+  const clientesDemo = Object.fromEntries(
+    clientes.map((c) => [c.id, { nombre: c.nombre, artes: c.artes || {} }])
+  );
+  return { ...shopping, clientesDemo };
+}
 
 export default function App() {
   const [shopping, setShopping] = useState(null);
@@ -17,6 +26,12 @@ export default function App() {
 
   useEffect(() => {
     if (esEditor) return;
+    // Si el editor guardó algo en este navegador, el visor lo usa.
+    const guardado = cargarConfig();
+    if (guardado) {
+      setShopping(conClientesDemo(guardado.shopping, guardado.clientes));
+      return;
+    }
     fetch(`${BASE}config.demo.json`)
       .then((r) => {
         if (!r.ok) throw new Error('No se pudo cargar la configuración del recorrido');

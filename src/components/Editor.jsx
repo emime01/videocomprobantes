@@ -4,6 +4,7 @@ import Hotspot from './Hotspot';
 import PanelEditor from './PanelEditor';
 import { comprimirArte, comprimirFoto, genId, slugify } from '../lib/imagenes';
 import { BASE, linkCliente, resolverUrl } from '../lib/rutas';
+import { borrarConfig, cargarConfig, guardarConfig } from '../lib/almacenamiento';
 
 function configDemoAClientes(config) {
   return Object.entries(config.clientesDemo || {}).map(([id, c]) => ({
@@ -25,11 +26,23 @@ export default function Editor() {
   const [zoom, setZoom] = useState(false);
   const [mostrarLuz, setMostrarLuz] = useState(true);
 
+  // 'guardado' | 'sin-guardar' | 'error-quota' | 'error'
+  const [estadoGuardado, setEstadoGuardado] = useState('guardado');
+
   const [box, setBox] = useState({ w: 0, h: 0, left: 0, top: 0 });
   const imgRef = useRef(null);
   const draggingRef = useRef(null);
+  const hidratadoRef = useRef(false);
 
   useEffect(() => {
+    // Preferimos lo guardado en este navegador; si no hay, el demo estático.
+    const guardado = cargarConfig();
+    if (guardado) {
+      setShopping(guardado.shopping);
+      setClientes(guardado.clientes);
+      setPuntoActualId(guardado.shopping.puntos?.[0]?.id || null);
+      return;
+    }
     fetch(`${BASE}config.demo.json`)
       .then((r) => {
         if (!r.ok) throw new Error('No se pudo cargar la configuración del recorrido');
@@ -43,6 +56,29 @@ export default function Editor() {
       })
       .catch((e) => setError(e.message));
   }, []);
+
+  // La primera vez que llegan los datos (hidratación) no cuenta como cambio;
+  // cualquier edición posterior marca "cambios sin guardar".
+  useEffect(() => {
+    if (!shopping) return;
+    if (!hidratadoRef.current) {
+      hidratadoRef.current = true;
+      return;
+    }
+    setEstadoGuardado('sin-guardar');
+  }, [shopping, clientes]);
+
+  function guardar() {
+    const r = guardarConfig(shopping, clientes);
+    if (r.ok) setEstadoGuardado('guardado');
+    else setEstadoGuardado(r.error === 'quota' ? 'error-quota' : 'error');
+  }
+
+  function restablecerDemo() {
+    if (!window.confirm('¿Descartar los cambios guardados en este navegador y volver al demo?')) return;
+    borrarConfig();
+    window.location.reload();
+  }
 
   const punto = useMemo(
     () => shopping?.puntos.find((p) => p.id === puntoActualId) || null,
@@ -316,7 +352,21 @@ export default function Editor() {
       <div className="editor-principal">
         <div className="editor-topbar">
           <strong>{shopping.nombre}</strong>
-          <span className="editor-topbar-nota">Editor — cambios en memoria, exportá el JSON para guardarlos</span>
+          <button
+            type="button"
+            className="btn-secundario"
+            onClick={guardar}
+            disabled={estadoGuardado === 'guardado'}
+          >
+            {estadoGuardado === 'guardado' ? 'Guardado ✓' : 'Guardar'}
+          </button>
+          <span className={`editor-estado editor-estado-${estadoGuardado}`}>
+            {estadoGuardado === 'guardado' && 'Sin cambios pendientes'}
+            {estadoGuardado === 'sin-guardar' && 'Cambios sin guardar'}
+            {estadoGuardado === 'error-quota' &&
+              'No entró en el navegador (demasiado peso). Usá Exportar JSON.'}
+            {estadoGuardado === 'error' && 'No se pudo guardar'}
+          </span>
           <a href={BASE} className="editor-volver">Ver como público ↗</a>
         </div>
 
@@ -426,6 +476,7 @@ export default function Editor() {
         onCopiarLink={copiarLink}
         onExportarJSON={exportarJSON}
         onImportarJSON={importarJSON}
+        onRestablecerDemo={restablecerDemo}
       />
     </div>
   );

@@ -55,6 +55,7 @@ export default function PanelEditor({
   onCopiarLink,
   onExportarJSON,
   onImportarJSON,
+  onRestablecerDemo,
 }) {
   const [nombreClienteNuevo, setNombreClienteNuevo] = useState('');
   const hotspot = hotspotSeleccionado != null ? punto.hotspots[hotspotSeleccionado] : null;
@@ -278,6 +279,13 @@ export default function PanelEditor({
             Importar JSON
           </FileButton>
         </div>
+        <p className="panel-hint">
+          "Guardar" (arriba) deja los cambios en este navegador. Exportá el JSON para tener un
+          backup o pasarlo a otra máquina.
+        </p>
+        <button type="button" className="btn-peligro" onClick={onRestablecerDemo}>
+          Restablecer al demo
+        </button>
       </section>
     </aside>
   );
