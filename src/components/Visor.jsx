@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ZonaSoporte from './ZonaSoporte';
 import Hotspot from './Hotspot';
+import { resolverUrl } from '../lib/rutas';
 
 export default function Visor({ shopping, clienteId }) {
   const [puntoId, setPuntoId] = useState(shopping.puntos[0]?.id);
@@ -33,7 +34,7 @@ export default function Visor({ shopping, clienteId }) {
   useEffect(() => {
     punto?.hotspots?.forEach((h) => {
       const destino = shopping.puntos.find((p) => p.id === h.to);
-      if (destino) new Image().src = destino.foto;
+      if (destino) new Image().src = resolverUrl(destino.foto);
     });
   }, [punto, shopping]);
 
@@ -53,7 +54,7 @@ export default function Visor({ shopping, clienteId }) {
       <div className="visor-stage">
         <img
           ref={imgRef}
-          src={punto.foto}
+          src={resolverUrl(punto.foto)}
           alt={punto.nombre}
           className={`visor-foto ${fading ? 'visor-foto-fade' : ''}`}
           draggable={false}
@@ -63,7 +64,7 @@ export default function Visor({ shopping, clienteId }) {
           style={{ left: box.left, top: box.top, width: box.w, height: box.h }}
         >
           {punto.soportes.map((s) => (
-            <ZonaSoporte key={s.id} soporte={s} size={box} arteUrl={cliente?.artes?.[s.id]} />
+            <ZonaSoporte key={s.id} soporte={s} size={box} arteUrl={resolverUrl(cliente?.artes?.[s.id])} />
           ))}
           {punto.hotspots?.map((h, i) => (
             <Hotspot key={`${punto.id}-${i}`} hotspot={h} onClick={() => irA(h.to)} />

@@ -18,6 +18,17 @@ npm run dev
 - `http://localhost:5173/?cliente=grido` — visor público con los artes de "Grido" montados en los soportes. Sin `?cliente`, los soportes se muestran vacíos ("Espacio disponible").
 - `http://localhost:5173/editor` — editor visual. Los cambios viven en memoria; usá "Exportar JSON" para guardarlos y "Importar JSON" para retomarlos.
 
+## Preview en vivo (GitHub Pages)
+
+Cada push a `main` publica la app automáticamente vía GitHub Actions (workflow `.github/workflows/deploy-pages.yml`). **Activación por única vez:** en el repo, `Settings → Pages → Build and deployment → Source: GitHub Actions`. Después de eso, cada push queda publicado solo.
+
+URL pública una vez activado:
+
+- Visor: `https://emime01.github.io/videocomprobantes/?cliente=grido`
+- Editor: `https://emime01.github.io/videocomprobantes/#/editor`
+
+> En Pages la app vive bajo el subpath `/videocomprobantes/`, así que el editor se abre con **hash** (`#/editor`) en vez de `/editor`. En dev local y en el deploy definitivo de Vercel (Fase 4) sigue funcionando `/editor` normal.
+
 ## Notas
 
 - Las fotos y artes de `/public/demo/` son placeholders SVG (no hay fotos reales del shopping todavía).

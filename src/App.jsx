@@ -1,15 +1,23 @@
 import { useEffect, useState } from 'react';
 import Visor from './components/Visor';
 import Editor from './components/Editor';
+import { BASE, esRutaEditor } from './lib/rutas';
 
 export default function App() {
   const [shopping, setShopping] = useState(null);
   const [error, setError] = useState(null);
-  const esEditor = window.location.pathname.replace(/\/+$/, '') === '/editor';
+  const [esEditor, setEsEditor] = useState(esRutaEditor());
+
+  // En GitHub Pages el editor se abre con hash (#/editor); reevaluamos al cambiarlo.
+  useEffect(() => {
+    const onHash = () => setEsEditor(esRutaEditor());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
 
   useEffect(() => {
     if (esEditor) return;
-    fetch('/config.demo.json')
+    fetch(`${BASE}config.demo.json`)
       .then((r) => {
         if (!r.ok) throw new Error('No se pudo cargar la configuración del recorrido');
         return r.json();

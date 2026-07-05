@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { resolverUrl } from '../lib/rutas';
 
 function FileButton({ children, accept = 'image/*', onFile, ...props }) {
   const inputRef = useRef(null);
@@ -241,7 +242,7 @@ export default function PanelEditor({
               return (
                 <div key={s.id} className="panel-arte-item">
                   <span>{s.puntoNombre} · {s.nombre}</span>
-                  {url && <img src={url} alt="" className="panel-arte-thumb" />}
+                  {url && <img src={resolverUrl(url)} alt="" className="panel-arte-thumb" />}
                   <div className="panel-punto-acciones">
                     <FileButton onFile={(file) => onSubirArte(clienteActivoId, s.id, file)}>
                       {url ? 'Reemplazar' : 'Subir'}
