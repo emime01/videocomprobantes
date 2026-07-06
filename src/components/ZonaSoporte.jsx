@@ -20,6 +20,7 @@ export default function ZonaSoporte({
   seleccionado = false,
   onSeleccionar,
   onIniciarArrastreEsquina,
+  onClickSoporte,
 }) {
   if (!size.w || !size.h) return null;
 
@@ -42,21 +43,25 @@ export default function ZonaSoporte({
     transform,
   };
 
+  const clickeable = !editable && typeof onClickSoporte === 'function';
   const clases = ['zona-soporte'];
   if (editable) clases.push('zona-soporte-editable');
   if (seleccionado) clases.push('zona-soporte-seleccionada');
+  if (clickeable) clases.push('zona-soporte-clickeable');
 
   return (
     <div
       className={clases.join(' ')}
       style={style}
       onPointerDown={editable ? () => onSeleccionar?.(soporte.id) : undefined}
+      onClick={clickeable ? () => onClickSoporte(soporte) : undefined}
     >
       {arteUrl ? (
         <img src={arteUrl} alt={soporte.nombre} className="zona-soporte-arte" draggable={false} />
       ) : (
         <div className="zona-soporte-vacia">
-          <span>Espacio disponible</span>
+          <span className="zsv-titulo">Espacio disponible</span>
+          <span className="zsv-sub">tu marca acá</span>
         </div>
       )}
       {mostrarLuz && <div className="zona-soporte-luz" />}

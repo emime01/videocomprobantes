@@ -5,26 +5,51 @@ import { cargarConfig, listarRecorridosLocales } from './almacenamiento';
 // (localStorage) lo pisa y lo extiende: recorridos editados o creados en este
 // navegador. En la Fase 3 esto se reemplaza por Supabase.
 
-let semillaCache = null;
+let dataCache = null;
 
-async function cargarSemilla() {
-  if (semillaCache) return semillaCache;
+async function cargarData() {
+  if (dataCache) return dataCache;
   const r = await fetch(`${BASE}catalogo.json`);
   if (!r.ok) throw new Error('No se pudo cargar el catálogo de recorridos');
-  const data = await r.json();
-  semillaCache = data.recorridos || [];
-  return semillaCache;
+  dataCache = await r.json();
+  return dataCache;
 }
 
-// Lista de recorridos para la home: unión de semilla + locales, sin duplicar,
-// con los metadatos locales pisando a los de la semilla.
+// Resumen liviano para la home (portada + números que venden).
+export function resumenRecorrido(r) {
+  return {
+    id: r.id,
+    nombre: r.nombre || r.id,
+    categoria: r.categoria || 'Sin categoría',
+    portada: r.puntos?.[0]?.foto || null,
+    paradas: r.puntos?.length || 0,
+    soportes: (r.puntos || []).reduce((a, p) => a + (p.soportes?.length || 0), 0),
+  };
+}
+
+// Lista para la home: unión de semilla + locales, con lo local pisando.
 export async function listarRecorridos() {
-  const semilla = await cargarSemilla();
+  const { recorridos = [] } = await cargarData();
   const locales = listarRecorridosLocales();
   const porId = new Map();
-  for (const r of semilla) porId.set(r.id, { id: r.id, nombre: r.nombre, categoria: r.categoria || 'Sin categoría' });
+  for (const r of recorridos) porId.set(r.id, resumenRecorrido(r));
   for (const r of locales) porId.set(r.id, r);
   return [...porId.values()];
+}
+
+// Datos de contacto comercial (WhatsApp / email) definidos en el catálogo.
+export async function obtenerContacto() {
+  const { contacto } = await cargarData();
+  return contacto || {};
+}
+
+// Link de consulta comercial: WhatsApp si está configurado, si no email.
+export function linkConsulta(contacto, texto) {
+  if (contacto?.whatsapp) {
+    return `https://wa.me/${contacto.whatsapp}?text=${encodeURIComponent(texto)}`;
+  }
+  const email = contacto?.email || 'comercial@movimagen.com.uy';
+  return `mailto:${email}?subject=${encodeURIComponent('Consulta por soportes publicitarios')}&body=${encodeURIComponent(texto)}`;
 }
 
 // Config completo de un recorrido: primero lo guardado en el navegador, si no
@@ -32,8 +57,8 @@ export async function listarRecorridos() {
 export async function cargarRecorrido(recorridoId) {
   const local = cargarConfig(recorridoId);
   if (local) return local;
-  const semilla = await cargarSemilla();
-  const r = semilla.find((x) => x.id === recorridoId);
+  const { recorridos = [] } = await cargarData();
+  const r = recorridos.find((x) => x.id === recorridoId);
   if (!r) return null;
   const { clientesDemo = {}, ...shopping } = r;
   const clientes = Object.entries(clientesDemo).map(([id, c]) => ({

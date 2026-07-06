@@ -24,6 +24,18 @@ Rutas (por hash, para que funcionen igual en GitHub Pages):
 
 Recorridos demo incluidos: `demo-shopping` (categoría Shoppings) y `demo-bus` (categoría Buses).
 
+## Herramientas de venta
+
+El visor está pensado como material comercial de Movimagen:
+
+- **Splash de bienvenida**: al abrir el link de un cliente (`?cliente=grido`), aparece una portada con su nombre — "Así se ve tu marca en …" (una vez por sesión).
+- **Ficha de soporte**: tocar cualquier soporte abre una tarjeta con su nombre, ubicación y formato, y un botón "Consultar por este soporte" que arma el mensaje solo.
+- **CTA flotante "Anunciá acá"**: siempre visible en el visor, abre WhatsApp o email con un texto prellenado que incluye el recorrido y la marca.
+- **Espacios disponibles que venden**: los soportes sin arte muestran "Espacio disponible · tu marca acá" con un borde naranja pulsante.
+- **Compartir y presentar**: botones de copiar link y pantalla completa en la barra superior; navegación con las flechas del teclado para reuniones.
+
+**Configurar el contacto:** en `public/catalogo.json`, el bloque `contacto` define adónde llegan las consultas. Con `whatsapp` (número con código de país, sin `+`, ej. `59899123456`) los CTA abren WhatsApp; si queda vacío, usan el `email`.
+
 ## Datos
 
 - El catálogo semilla vive en [`public/catalogo.json`](./public/catalogo.json): un arreglo de recorridos, cada uno con `id`, `nombre`, `categoria`, `puntos[]` y (para el demo) `clientesDemo`.
