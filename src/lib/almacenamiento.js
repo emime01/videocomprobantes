@@ -36,7 +36,9 @@ export function borrarConfig(recorridoId) {
   }
 }
 
-// Metadatos de los recorridos guardados en este navegador (para la home).
+// Metadatos de los recorridos guardados en este navegador (para la home):
+// portada y contadores incluidos, para que las cards muestren lo mismo que
+// mostrarían con la semilla.
 export function listarRecorridosLocales() {
   const out = [];
   try {
@@ -44,8 +46,16 @@ export function listarRecorridosLocales() {
       const k = localStorage.key(i);
       if (!k || !k.startsWith(PREFIJO)) continue;
       try {
-        const { id, nombre, categoria } = JSON.parse(localStorage.getItem(k));
-        if (id) out.push({ id, nombre: nombre || id, categoria: categoria || 'Sin categoría' });
+        const cfg = JSON.parse(localStorage.getItem(k));
+        if (!cfg.id) continue;
+        out.push({
+          id: cfg.id,
+          nombre: cfg.nombre || cfg.id,
+          categoria: cfg.categoria || 'Sin categoría',
+          portada: cfg.puntos?.[0]?.foto || null,
+          paradas: cfg.puntos?.length || 0,
+          soportes: (cfg.puntos || []).reduce((a, p) => a + (p.soportes?.length || 0), 0),
+        });
       } catch {
         /* entrada corrupta, la ignoramos */
       }

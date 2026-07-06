@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { listarRecorridos } from '../lib/catalogo';
 import { guardarConfig } from '../lib/almacenamiento';
-import { irA, linkEditor, linkVisor } from '../lib/rutas';
+import { irA, linkEditor, linkVisor, resolverUrl } from '../lib/rutas';
 import { genId, slugify } from '../lib/imagenes';
 
 export default function Home() {
@@ -11,6 +11,7 @@ export default function Home() {
   const [categoriaNueva, setCategoriaNueva] = useState('');
 
   useEffect(() => {
+    document.title = 'Movimagen · Recorridos virtuales';
     listarRecorridos().then(setRecorridos).catch((e) => setError(e.message));
   }, []);
 
@@ -46,21 +47,43 @@ export default function Home() {
 
   return (
     <div className="home">
-      <header className="home-header">
-        <h1>Recorridos</h1>
-        <span className="home-marca">MOVIMAGEN</span>
+      <header className="home-hero">
+        <span className="marca marca-grande">MOVIMAGEN<i>·</i></span>
+        <h1>Recorridos virtuales</h1>
+        <p>
+          Mostrale a cada anunciante su marca montada en los soportes reales,
+          antes de imprimir un solo vinilo.
+        </p>
       </header>
 
-      {grupos.length === 0 && <p className="panel-hint">Todavía no hay recorridos. Creá el primero abajo.</p>}
+      {grupos.length === 0 && (
+        <p className="panel-hint">Todavía no hay recorridos. Creá el primero abajo.</p>
+      )}
 
       {grupos.map((g) => (
         <section key={g.categoria} className="home-grupo">
           <h2>{g.categoria}</h2>
-          <ul className="home-lista">
+          <ul className="home-cards">
             {g.items.map((r) => (
-              <li key={r.id} className="home-item">
-                <a className="home-item-nombre" href={linkVisor(r.id)}>{r.nombre}</a>
-                <a className="home-item-editar" href={linkEditor(r.id)}>✎ editar</a>
+              <li key={r.id} className="card">
+                <a className="card-media" href={linkVisor(r.id)}>
+                  {r.portada ? (
+                    <img src={resolverUrl(r.portada)} alt="" loading="lazy" />
+                  ) : (
+                    <div className="card-media-vacia">Sin fotos todavía</div>
+                  )}
+                </a>
+                <div className="card-body">
+                  <a className="card-nombre" href={linkVisor(r.id)}>{r.nombre}</a>
+                  <span className="card-stats">
+                    {r.paradas} {r.paradas === 1 ? 'parada' : 'paradas'} · {r.soportes}{' '}
+                    {r.soportes === 1 ? 'soporte' : 'soportes'}
+                  </span>
+                  <div className="card-acciones">
+                    <a className="btn-cta btn-chico" href={linkVisor(r.id)}>Ver recorrido →</a>
+                    <a className="card-editar" href={linkEditor(r.id)}>✎ Editar</a>
+                  </div>
+                </div>
               </li>
             ))}
           </ul>
@@ -88,6 +111,10 @@ export default function Home() {
         </div>
         <p className="panel-hint">Se crea vacío; después subís las fotos y calibrás los soportes en el editor.</p>
       </section>
+
+      <footer className="home-pie">
+        Movimagen Publicidad · publicidad que se ve
+      </footer>
     </div>
   );
 }
