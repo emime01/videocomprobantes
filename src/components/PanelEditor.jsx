@@ -26,6 +26,7 @@ function FileButton({ children, accept = 'image/*', onFile, ...props }) {
 export default function PanelEditor({
   shopping,
   punto,
+  remoto = false,
   onEditarRecorrido,
   clientes,
   clienteActivoId,
@@ -308,11 +309,12 @@ export default function PanelEditor({
           </FileButton>
         </div>
         <p className="panel-hint">
-          "Guardar" (arriba) deja los cambios en este navegador. Exportá el JSON para tener un
-          backup o pasarlo a otra máquina.
+          {remoto
+            ? '"Publicar" (arriba) sube los cambios a Supabase: los ve cualquiera con el link. Exportá el JSON como backup.'
+            : '"Guardar" (arriba) deja los cambios en este navegador. Exportá el JSON para tener un backup o pasarlo a otra máquina.'}
         </p>
         <button type="button" className="btn-peligro" onClick={onRestablecerDemo}>
-          Descartar cambios guardados
+          {remoto ? 'Descartar borrador local' : 'Descartar cambios guardados'}
         </button>
       </section>
     </aside>

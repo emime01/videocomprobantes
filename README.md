@@ -7,7 +7,16 @@ Recorrido virtual foto a foto, con los artes de cada anunciante montados en pers
 - **Home con varios recorridos agrupados por categoría** (Shoppings, Buses, etc.). Cada recorrido es independiente y usa el mismo motor.
 - **Visor** por recorrido, con transición de "avance" (zoom + desvanecido) entre fotos para dar sensación de movimiento.
 - **Editor** por recorrido: calibración de soportes arrastrando esquinas, hotspots, puntos (subir/reemplazar foto), clientes y artes, nombre y categoría del recorrido, zoom 2x, export/import JSON.
-- **Guardado en el navegador** (`localStorage`), con botón Guardar e indicador de estado. Sin Supabase todavía (Fase 3).
+- **Fase 3 — Supabase (opcional, por variables de entorno):** con las credenciales cargadas, la app lee los recorridos de Postgres y las imágenes de Storage, el editor pide la clave de administración y **Publicar** sube todo (los links los ve cualquiera, desde cualquier dispositivo). Sin credenciales, funciona en modo local (semilla + `localStorage`), que es lo que corre en GitHub Pages.
+
+## Activar Supabase + Vercel (Fase 3, ~10 minutos)
+
+1. **Supabase**: crear cuenta gratis en [supabase.com](https://supabase.com) → New project. Cuando arranque, ir a **SQL Editor**, pegar el contenido de [`supabase/schema.sql`](./supabase/schema.sql) y correrlo (crea tablas, permisos y los buckets `fotos`/`artes`, con datos demo incluidos).
+2. **Credenciales**: en Supabase, `Settings → API`: copiar la **URL** del proyecto, la **anon key** y la **service_role key**.
+3. **Vercel**: en [vercel.com](https://vercel.com) → Add New Project → importar este repo de GitHub. Framework: Vite (lo detecta solo). Antes de deployar, cargar en Environment Variables las 4 de [`.env.example`](./.env.example): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` y `ADMIN_KEY` (una clave que inventás vos para el editor).
+4. **Listo**: Vercel te da una URL (ej. `recorrido-movimagen.vercel.app`). El visor y los links por cliente salen de Supabase; el editor pide tu `ADMIN_KEY` y publica con el botón **Publicar**.
+
+Seguridad (SPEC 4.2): el navegador solo tiene la anon key, que **únicamente puede leer** (RLS). Toda escritura pasa por las funciones `/api` de Vercel, que validan `x-admin-key` contra `ADMIN_KEY` y usan la service role key del lado del servidor. Sin la clave correcta no existe ningún camino de escritura.
 
 ## Desarrollo local
 

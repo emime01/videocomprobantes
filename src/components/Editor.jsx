@@ -6,6 +6,7 @@ import { comprimirArte, comprimirFoto, genId, slugify } from '../lib/imagenes';
 import { linkCliente, linkVisor, resolverUrl } from '../lib/rutas';
 import { borrarConfig, guardarConfig } from '../lib/almacenamiento';
 import { cargarRecorrido } from '../lib/catalogo';
+import { guardarRemoto, remotoDisponible, subirPendientes } from '../lib/supabase';
 
 export default function Editor({ recorridoId, onVolver }) {
   const [shopping, setShopping] = useState(null);
@@ -19,13 +20,27 @@ export default function Editor({ recorridoId, onVolver }) {
   const [zoom, setZoom] = useState(false);
   const [mostrarLuz, setMostrarLuz] = useState(true);
 
-  // 'guardado' | 'sin-guardar' | 'error-quota' | 'error'
+  // 'guardado' | 'sin-guardar' | 'guardando' | 'error-quota' | 'error-auth' | 'error'
   const [estadoGuardado, setEstadoGuardado] = useState('guardado');
+  const [errorGuardado, setErrorGuardado] = useState('');
+
+  // Clave de administración (SPEC 5): se pide al entrar en modo remoto, se
+  // guarda en sessionStorage y viaja como x-admin-key en cada escritura.
+  const [claveLista, setClaveLista] = useState(() => {
+    if (!remotoDisponible) return true;
+    try {
+      return Boolean(sessionStorage.getItem('adminKey'));
+    } catch {
+      return false;
+    }
+  });
+  const [claveInput, setClaveInput] = useState('');
 
   const [box, setBox] = useState({ w: 0, h: 0, left: 0, top: 0 });
   const imgRef = useRef(null);
   const draggingRef = useRef(null);
   const hidratadoRef = useRef(false);
+  const omitirMarcaRef = useRef(false);
 
   useEffect(() => {
     // Preferimos lo guardado en este navegador; si no hay, la semilla del catálogo.
@@ -43,20 +58,72 @@ export default function Editor({ recorridoId, onVolver }) {
   }, [recorridoId]);
 
   // La primera vez que llegan los datos (hidratación) no cuenta como cambio;
-  // cualquier edición posterior marca "cambios sin guardar".
+  // cualquier edición posterior marca "cambios sin guardar". El reemplazo de
+  // dataURLs por URLs subidas durante el guardado tampoco cuenta.
   useEffect(() => {
     if (!shopping) return;
     if (!hidratadoRef.current) {
       hidratadoRef.current = true;
       return;
     }
+    if (omitirMarcaRef.current) {
+      omitirMarcaRef.current = false;
+      return;
+    }
     setEstadoGuardado('sin-guardar');
   }, [shopping, clientes]);
 
-  function guardar() {
-    const r = guardarConfig(shopping, clientes);
-    if (r.ok) setEstadoGuardado('guardado');
-    else setEstadoGuardado(r.error === 'quota' ? 'error-quota' : 'error');
+  async function guardar() {
+    if (!remotoDisponible) {
+      const r = guardarConfig(shopping, clientes);
+      if (r.ok) setEstadoGuardado('guardado');
+      else setEstadoGuardado(r.error === 'quota' ? 'error-quota' : 'error');
+      return;
+    }
+    // Modo remoto: primero suben las imágenes nuevas (dataURL → Storage),
+    // después el config completo vía /api/guardar-config.
+    setEstadoGuardado('guardando');
+    let clave = '';
+    try {
+      clave = sessionStorage.getItem('adminKey') || '';
+    } catch {
+      /* sin sessionStorage */
+    }
+    try {
+      const subido = await subirPendientes(shopping, clientes, clave);
+      omitirMarcaRef.current = true;
+      setShopping(subido.shopping);
+      setClientes(subido.clientes);
+      await guardarRemoto(subido.shopping, subido.clientes, clave);
+      borrarConfig(recorridoId); // el borrador local ya no hace falta
+      setEstadoGuardado('guardado');
+    } catch (e) {
+      if (e.status === 401) {
+        try {
+          sessionStorage.removeItem('adminKey');
+        } catch {
+          /* no-op */
+        }
+        setEstadoGuardado('error-auth');
+        setClaveLista(false);
+      } else {
+        setErrorGuardado(e.message || 'No se pudo guardar');
+        setEstadoGuardado('error');
+      }
+    }
+  }
+
+  function ingresarClave() {
+    const clave = claveInput.trim();
+    if (!clave) return;
+    try {
+      sessionStorage.setItem('adminKey', clave);
+    } catch {
+      /* no-op */
+    }
+    setClaveInput('');
+    setClaveLista(true);
+    if (estadoGuardado === 'error-auth') setEstadoGuardado('sin-guardar');
   }
 
   function restablecerDemo() {
@@ -331,6 +398,34 @@ export default function Editor({ recorridoId, onVolver }) {
         {error} <a href="#/">Volver al inicio</a>
       </div>
     );
+
+  // Modo remoto: pedir la clave antes de mostrar el editor (SPEC 5).
+  if (remotoDisponible && !claveLista)
+    return (
+      <div className="splash">
+        <div className="splash-card">
+          <span className="marca marca-grande">MOVIMAGEN<i>·</i></span>
+          <h2 className="clave-titulo">Editor</h2>
+          <p>Ingresá la clave de administración para editar.</p>
+          {estadoGuardado === 'error-auth' && (
+            <p className="clave-error">La clave era incorrecta, probá de nuevo.</p>
+          )}
+          <input
+            type="password"
+            className="clave-input"
+            placeholder="Clave"
+            value={claveInput}
+            onChange={(e) => setClaveInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && ingresarClave()}
+            autoFocus
+          />
+          <button type="button" className="btn-cta" onClick={ingresarClave}>
+            Entrar →
+          </button>
+        </div>
+      </div>
+    );
+
   if (!shopping) return <div className="estado">Cargando…</div>;
 
   const centroide = soporteSeleccionado
@@ -351,16 +446,25 @@ export default function Editor({ recorridoId, onVolver }) {
             type="button"
             className="btn-secundario"
             onClick={guardar}
-            disabled={estadoGuardado === 'guardado'}
+            disabled={estadoGuardado === 'guardado' || estadoGuardado === 'guardando'}
           >
-            {estadoGuardado === 'guardado' ? 'Guardado ✓' : 'Guardar'}
+            {estadoGuardado === 'guardado'
+              ? 'Guardado ✓'
+              : estadoGuardado === 'guardando'
+                ? 'Guardando…'
+                : remotoDisponible
+                  ? 'Publicar'
+                  : 'Guardar'}
           </button>
           <span className={`editor-estado editor-estado-${estadoGuardado}`}>
-            {estadoGuardado === 'guardado' && 'Sin cambios pendientes'}
-            {estadoGuardado === 'sin-guardar' && 'Cambios sin guardar'}
+            {estadoGuardado === 'guardado' &&
+              (remotoDisponible ? 'Publicado — lo ve cualquiera con el link' : 'Sin cambios pendientes')}
+            {estadoGuardado === 'sin-guardar' &&
+              (remotoDisponible ? 'Cambios sin publicar' : 'Cambios sin guardar')}
+            {estadoGuardado === 'guardando' && 'Subiendo imágenes y publicando…'}
             {estadoGuardado === 'error-quota' &&
               'No entró en el navegador (demasiado peso). Usá Exportar JSON.'}
-            {estadoGuardado === 'error' && 'No se pudo guardar'}
+            {estadoGuardado === 'error' && (errorGuardado || 'No se pudo guardar')}
           </span>
           <a href={linkVisor(recorridoId)} className="editor-volver">Ver como público ↗</a>
         </div>
@@ -448,6 +552,7 @@ export default function Editor({ recorridoId, onVolver }) {
       <PanelEditor
         shopping={shopping}
         punto={punto}
+        remoto={remotoDisponible}
         onEditarRecorrido={editarRecorrido}
         clientes={clientes}
         clienteActivoId={clienteActivoId}

@@ -494,6 +494,33 @@ button {
   to   { opacity: 1; }
 }
 
+/* ── Clave del editor (modo remoto) ──────────────────────────────────── */
+
+.clave-titulo {
+  font-size: 2rem !important;
+}
+
+.clave-input {
+  background: #1a1d22;
+  border: 1px solid var(--borde);
+  color: var(--texto);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 1rem;
+  width: min(280px, 100%);
+  text-align: center;
+}
+
+.clave-input:focus {
+  outline: none;
+  border-color: var(--naranja);
+}
+
+.clave-error {
+  color: #ff8a80 !important;
+  font-size: 0.85rem;
+}
+
 /* ── Ficha de soporte ────────────────────────────────────────────────── */
 
 .ficha-backdrop {
