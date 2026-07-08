@@ -2,7 +2,7 @@
 // a Storage con la service role key y devuelve su URL pública. Valida
 // x-admin-key contra ADMIN_KEY (SPEC 9).
 
-const SB = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const SB = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
 const SRK = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export default async function handler(req, res) {

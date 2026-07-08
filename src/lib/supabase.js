@@ -4,7 +4,9 @@
 // Sin VITE_SUPABASE_URL/ANON_KEY la app queda en modo local (semilla +
 // localStorage), como hasta la Fase 2.
 
-const URL_SB = import.meta.env.VITE_SUPABASE_URL;
+// Sacamos la barra final por si se pegó la URL con "/": si no, la app armaría
+// ".../supabase.co//rest/v1/..." (doble barra) y Supabase responde 404.
+const URL_SB = (import.meta.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
 const ANON = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const remotoDisponible = Boolean(URL_SB && ANON);

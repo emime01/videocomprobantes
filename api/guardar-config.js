@@ -2,7 +2,7 @@
 // en Supabase. Única vía de escritura a las tablas — usa la service role key
 // (nunca llega al cliente) y valida x-admin-key contra ADMIN_KEY (SPEC 4.2).
 
-const SB = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const SB = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
 const SRK = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 function cab(extra = {}) {
