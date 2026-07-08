@@ -18,6 +18,7 @@ export default function ZonaSoporte({
   mostrarLuz = true,
   editable = false,
   seleccionado = false,
+  montando = false,
   onSeleccionar,
   onIniciarArrastreEsquina,
   onClickSoporte,
@@ -57,7 +58,12 @@ export default function ZonaSoporte({
       onClick={clickeable ? () => onClickSoporte(soporte) : undefined}
     >
       {arteUrl ? (
-        <img src={arteUrl} alt={soporte.nombre} className="zona-soporte-arte" draggable={false} />
+        <img
+          src={arteUrl}
+          alt={soporte.nombre}
+          className={`zona-soporte-arte ${montando ? 'zona-soporte-arte-montando' : ''}`}
+          draggable={false}
+        />
       ) : (
         <div className="zona-soporte-vacia">
           <span className="zsv-titulo">Espacio disponible</span>

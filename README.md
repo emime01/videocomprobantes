@@ -45,6 +45,10 @@ El visor está pensado como material comercial de Movimagen:
 
 **Configurar el contacto:** en `public/catalogo.json`, el bloque `contacto` define adónde llegan las consultas. Con `whatsapp` (número con código de país, sin `+`, ej. `59899123456`) los CTA abren WhatsApp; si queda vacío, usan el `email`.
 
+## Marca
+
+La identidad sigue el manual de marca Movimagen: naranja `#eb691c` (Pantone 1505 C), gris `#d0d3d4`, tipografía Montserrat, y el logo/monograma oficiales en `public/marca/` (`wordmark-blanco.png`, `wordmark-naranja.png`, `monograma.png`, `favicon.png`). Para reemplazar el logo por una versión nueva, pisá esos archivos manteniendo el nombre.
+
 ## Datos
 
 - El catálogo semilla vive en [`public/catalogo.json`](./public/catalogo.json): un arreglo de recorridos, cada uno con `id`, `nombre`, `categoria`, `puntos[]` y (para el demo) `clientesDemo`.

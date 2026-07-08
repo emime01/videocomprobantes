@@ -7,6 +7,7 @@ import { linkCliente, linkVisor, resolverUrl } from '../lib/rutas';
 import { borrarConfig, guardarConfig } from '../lib/almacenamiento';
 import { cargarRecorrido } from '../lib/catalogo';
 import { guardarRemoto, remotoDisponible, subirPendientes } from '../lib/supabase';
+import Logo from './Logo';
 
 export default function Editor({ recorridoId, onVolver }) {
   const [shopping, setShopping] = useState(null);
@@ -404,7 +405,7 @@ export default function Editor({ recorridoId, onVolver }) {
     return (
       <div className="splash">
         <div className="splash-card">
-          <span className="marca marca-grande">MOVIMAGEN<i>·</i></span>
+          <Logo className="logo-lg" />
           <h2 className="clave-titulo">Editor</h2>
           <p>Ingresá la clave de administración para editar.</p>
           {estadoGuardado === 'error-auth' && (
