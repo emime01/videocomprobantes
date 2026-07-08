@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ZonaSoporte from './ZonaSoporte';
 import Hotspot from './Hotspot';
-import { resolverUrl } from '../lib/rutas';
+import Logo, { Monograma } from './Logo';
+import { alternarPantallaCompleta, pedirPantallaCompleta, resolverUrl } from '../lib/rutas';
 import { linkConsulta, obtenerContacto } from '../lib/catalogo';
 
 export default function Visor({ shopping, clienteId }) {
@@ -11,11 +12,14 @@ export default function Visor({ shopping, clienteId }) {
   const [box, setBox] = useState({ w: 0, h: 0, left: 0, top: 0 });
   // Transición de avance: 'idle' | 'saliendo' | 'entrando'
   const [fase, setFase] = useState('idle');
-  const [ficha, setFicha] = useState(null); // soporte tocado (modo comercial)
+  const [montarArte, setMontarArte] = useState(true); // dispara la animación del arte al llegar
+  const [ficha, setFicha] = useState(null);
   const [toast, setToast] = useState('');
   const [contacto, setContacto] = useState(null);
+  const [autoplay, setAutoplay] = useState(false);
+  const [cierre, setCierre] = useState(false); // pantalla de cierre al terminar
 
-  // Splash de bienvenida: una vez por sesión, solo con cliente en el link.
+  // Apertura: solo cuando el link trae cliente. Una vez por sesión.
   const splashKey = `splash:${shopping.id}:${clienteId || ''}`;
   const [splash, setSplash] = useState(() => {
     if (!cliente) return false;
@@ -34,21 +38,28 @@ export default function Visor({ shopping, clienteId }) {
     [shopping, puntoId]
   );
   const indice = shopping.puntos.findIndex((p) => p.id === puntoId);
+  const totalConArte = useMemo(() => {
+    if (!cliente) return 0;
+    return shopping.puntos.reduce(
+      (a, p) => a + p.soportes.filter((s) => cliente.artes?.[s.id]).length,
+      0
+    );
+  }, [shopping, cliente]);
+  const totalSoportes = useMemo(
+    () => shopping.puntos.reduce((a, p) => a + p.soportes.length, 0),
+    [shopping]
+  );
 
   useEffect(() => {
     obtenerContacto().then(setContacto).catch(() => {});
   }, []);
 
-  // Título de pestaña dinámico: material comercial con nombre y ubicación.
   useEffect(() => {
     document.title = cliente
       ? `${cliente.nombre} × ${shopping.nombre} · Movimagen`
       : `${shopping.nombre} · Movimagen`;
   }, [shopping, cliente]);
 
-  // La foto puede quedar con letterbox dentro del stage (aspect ratio propia).
-  // Medimos la caja realmente renderizada de la <img> para que los porcentajes
-  // de esquinas/hotspots se ubiquen sobre la foto y no sobre el contenedor.
   useEffect(() => {
     const img = imgRef.current;
     if (!img) return;
@@ -69,28 +80,54 @@ export default function Visor({ shopping, clienteId }) {
     });
   }, [punto, shopping]);
 
-  // Navegación con flechas del teclado (para presentaciones).
+  // Al cambiar de parada, re-disparamos el "montaje" del arte.
+  useEffect(() => {
+    setMontarArte(false);
+    const t = setTimeout(() => setMontarArte(true), 30);
+    return () => clearTimeout(t);
+  }, [punto?.id]);
+
+  // Navegación con flechas del teclado.
   useEffect(() => {
     function onKey(e) {
-      if (splash || ficha) return;
-      if (e.key === 'ArrowRight' && indice < shopping.puntos.length - 1) irA(shopping.puntos[indice + 1].id);
+      if (splash || ficha || cierre) return;
+      if (e.key === 'ArrowRight') avanzar();
       if (e.key === 'ArrowLeft' && indice > 0) irA(shopping.puntos[indice - 1].id);
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   });
 
+  // Tour automático.
+  useEffect(() => {
+    if (!autoplay || splash || cierre) return;
+    const t = setTimeout(() => {
+      if (indice < shopping.puntos.length - 1) irA(shopping.puntos[indice + 1].id);
+      else {
+        setAutoplay(false);
+        setCierre(true);
+      }
+    }, 3200);
+    return () => clearTimeout(t);
+  }, [autoplay, indice, splash, cierre, puntoId]);
+
   function irA(id) {
     if (id === puntoId || fase !== 'idle') return;
-    setFase('saliendo'); // la foto actual avanza hacia adelante y se desvanece
+    setFase('saliendo');
     setTimeout(() => {
       setPuntoId(id);
-      setFase('entrando'); // la nueva entra desde un poco más atrás
+      setFase('entrando');
       setTimeout(() => setFase('idle'), 260);
     }, 220);
   }
 
+  function avanzar() {
+    if (indice < shopping.puntos.length - 1) irA(shopping.puntos[indice + 1].id);
+    else setCierre(true);
+  }
+
   function cerrarSplash() {
+    pedirPantallaCompleta();
     setSplash(false);
     try {
       sessionStorage.setItem(splashKey, '1');
@@ -105,11 +142,6 @@ export default function Visor({ shopping, clienteId }) {
     setTimeout(() => setToast(''), 2200);
   }
 
-  function pantallaCompleta() {
-    if (document.fullscreenElement) document.exitFullscreen();
-    else visorRef.current?.requestFullscreen?.();
-  }
-
   if (!punto) return null;
 
   const textoGeneral = `Hola, estuve viendo el recorrido "${shopping.nombre}"${
@@ -118,9 +150,16 @@ export default function Visor({ shopping, clienteId }) {
 
   return (
     <div className="visor" ref={visorRef}>
+      {/* Progreso tipo historias */}
+      <div className="visor-progreso">
+        {shopping.puntos.map((p, i) => (
+          <span key={p.id} className={`prog ${i < indice ? 'prog-hecha' : ''} ${i === indice ? 'prog-actual' : ''}`} />
+        ))}
+      </div>
+
       <header className="visor-topbar">
         <a className="marca" href="#/" title="Todos los recorridos">
-          MOVIMAGEN<i>·</i>
+          <Logo />
         </a>
         <div className="visor-titulo">
           <strong>{shopping.nombre}</strong>
@@ -129,8 +168,17 @@ export default function Visor({ shopping, clienteId }) {
           </span>
         </div>
         <div className="visor-acciones">
+          <button
+            type="button"
+            className={autoplay ? 'activo' : ''}
+            onClick={() => setAutoplay((v) => !v)}
+            title={autoplay ? 'Pausar tour' : 'Reproducir tour'}
+            aria-label="Tour automático"
+          >
+            {autoplay ? '❚❚' : '▶'}
+          </button>
           <button type="button" onClick={compartir} title="Copiar link" aria-label="Copiar link">⧉</button>
-          <button type="button" onClick={pantallaCompleta} title="Pantalla completa" aria-label="Pantalla completa">⛶</button>
+          <button type="button" onClick={alternarPantallaCompleta} title="Pantalla completa" aria-label="Pantalla completa">⛶</button>
         </div>
       </header>
 
@@ -152,6 +200,7 @@ export default function Visor({ shopping, clienteId }) {
               soporte={s}
               size={box}
               arteUrl={resolverUrl(cliente?.artes?.[s.id])}
+              montando={montarArte && !!cliente?.artes?.[s.id]}
               onClickSoporte={() => setFicha(s)}
             />
           ))}
@@ -174,26 +223,21 @@ export default function Visor({ shopping, clienteId }) {
         ))}
       </nav>
 
-      <a
-        className="cta-flotante"
-        href={linkConsulta(contacto, textoGeneral)}
-        target="_blank"
-        rel="noreferrer"
-      >
+      <a className="cta-flotante" href={linkConsulta(contacto, textoGeneral)} target="_blank" rel="noreferrer">
         Anunciá acá →
       </a>
 
       {splash && cliente && (
         <div className="splash">
           <div className="splash-card">
-            <span className="marca marca-grande">MOVIMAGEN<i>·</i></span>
+            <Logo className="logo-lg splash-logo" />
+            <p className="splash-intro">Preparamos esta experiencia para</p>
             <h2>{cliente.nombre}</h2>
-            <p>
+            <p className="splash-sub">
               Así se ve tu marca en <strong>{shopping.nombre}</strong>.
-              <br />
-              Recorrelo tocando las flechas naranjas.
+              Recorrelo y mirá el impacto real.
             </p>
-            <button type="button" className="btn-cta" onClick={cerrarSplash}>
+            <button type="button" className="btn-cta btn-cta-lg" onClick={cerrarSplash}>
               Ver mi marca →
             </button>
           </div>
@@ -203,9 +247,7 @@ export default function Visor({ shopping, clienteId }) {
       {ficha && (
         <div className="ficha-backdrop" onClick={() => setFicha(null)}>
           <div className="ficha" onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="ficha-cerrar" onClick={() => setFicha(null)} aria-label="Cerrar">
-              ✕
-            </button>
+            <button type="button" className="ficha-cerrar" onClick={() => setFicha(null)} aria-label="Cerrar">✕</button>
             <span className={`ficha-tag ${cliente?.artes?.[ficha.id] ? 'ficha-tag-montado' : ''}`}>
               {cliente?.artes?.[ficha.id] ? 'Con tu marca montada' : 'Espacio disponible'}
             </span>
@@ -215,15 +257,38 @@ export default function Visor({ shopping, clienteId }) {
             </p>
             <a
               className="btn-cta"
-              href={linkConsulta(
-                contacto,
-                `Hola, me interesa el soporte "${ficha.nombre}" en ${shopping.nombre} (${punto.nombre}).`
-              )}
+              href={linkConsulta(contacto, `Hola, me interesa el soporte "${ficha.nombre}" en ${shopping.nombre} (${punto.nombre}).`)}
               target="_blank"
               rel="noreferrer"
             >
               Consultar por este soporte →
             </a>
+          </div>
+        </div>
+      )}
+
+      {cierre && (
+        <div className="splash cierre">
+          <div className="splash-card">
+            <Monograma className="cierre-mono" />
+            <h2 className="cierre-titulo">{cliente ? `¿Tu marca en todo el recorrido?` : '¿Tu marca acá?'}</h2>
+            <p className="splash-sub">
+              {cliente
+                ? `Viste a ${cliente.nombre} en ${totalConArte} ${totalConArte === 1 ? 'soporte' : 'soportes'} de ${shopping.nombre}.`
+                : `${totalSoportes} ${totalSoportes === 1 ? 'soporte disponible' : 'soportes disponibles'} en ${shopping.nombre}.`}
+              <br />Hablemos y lo hacemos realidad.
+            </p>
+            <a
+              className="btn-cta btn-cta-lg"
+              href={linkConsulta(contacto, textoGeneral)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Quiero anunciar →
+            </a>
+            <button type="button" className="cierre-volver" onClick={() => { setCierre(false); irA(shopping.puntos[0].id); }}>
+              Ver el recorrido de nuevo
+            </button>
           </div>
         </div>
       )}

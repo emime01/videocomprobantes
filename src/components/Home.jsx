@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { listarRecorridos } from '../lib/catalogo';
 import { guardarConfig } from '../lib/almacenamiento';
-import { irA, linkEditor, linkVisor, resolverUrl } from '../lib/rutas';
+import { irA, linkEditor, linkVisor, pedirPantallaCompleta, resolverUrl } from '../lib/rutas';
 import { genId, slugify } from '../lib/imagenes';
+import Logo from './Logo';
 
 export default function Home() {
   const [recorridos, setRecorridos] = useState(null);
@@ -48,7 +49,7 @@ export default function Home() {
   return (
     <div className="home">
       <header className="home-hero">
-        <span className="marca marca-grande">MOVIMAGEN<i>·</i></span>
+        <Logo className="logo-lg" />
         <h1>Recorridos virtuales</h1>
         <p>
           Mostrale a cada anunciante su marca montada en los soportes reales,
@@ -66,21 +67,30 @@ export default function Home() {
           <ul className="home-cards">
             {g.items.map((r) => (
               <li key={r.id} className="card">
-                <a className="card-media" href={linkVisor(r.id)}>
+                <a
+                  className="card-media"
+                  href={linkVisor(r.id)}
+                  onClick={pedirPantallaCompleta}
+                >
                   {r.portada ? (
                     <img src={resolverUrl(r.portada)} alt="" loading="lazy" />
                   ) : (
                     <div className="card-media-vacia">Sin fotos todavía</div>
                   )}
+                  <span className="card-badge">{r.categoria}</span>
                 </a>
                 <div className="card-body">
-                  <a className="card-nombre" href={linkVisor(r.id)}>{r.nombre}</a>
+                  <a className="card-nombre" href={linkVisor(r.id)} onClick={pedirPantallaCompleta}>
+                    {r.nombre}
+                  </a>
                   <span className="card-stats">
                     {r.paradas} {r.paradas === 1 ? 'parada' : 'paradas'} · {r.soportes}{' '}
                     {r.soportes === 1 ? 'soporte' : 'soportes'}
                   </span>
                   <div className="card-acciones">
-                    <a className="btn-cta btn-chico" href={linkVisor(r.id)}>Ver recorrido →</a>
+                    <a className="btn-cta btn-chico" href={linkVisor(r.id)} onClick={pedirPantallaCompleta}>
+                      Ver recorrido →
+                    </a>
                     <a className="card-editar" href={linkEditor(r.id)}>✎ Editar</a>
                   </div>
                 </div>
@@ -113,7 +123,8 @@ export default function Home() {
       </section>
 
       <footer className="home-pie">
-        Movimagen Publicidad · publicidad que se ve
+        <Logo className="logo-pie" />
+        <span>Publicidad que se ve.</span>
       </footer>
     </div>
   );

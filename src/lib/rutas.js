@@ -31,6 +31,26 @@ export function irA(hashPath) {
   window.location.hash = hashPath;
 }
 
+// Pantalla completa. Debe llamarse desde un gesto del usuario (click/tap).
+// La app es una sola página, así que el fullscreen se mantiene al navegar por hash.
+export function pedirPantallaCompleta() {
+  const el = document.documentElement;
+  try {
+    if (!document.fullscreenElement) el.requestFullscreen?.({ navigationUI: 'hide' });
+  } catch {
+    /* algunos navegadores lo bloquean; no es crítico */
+  }
+}
+
+export function alternarPantallaCompleta() {
+  try {
+    if (document.fullscreenElement) document.exitFullscreen?.();
+    else document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
+  } catch {
+    /* no-op */
+  }
+}
+
 export function linkVisor(recorridoId) {
   return `#/${recorridoId}`;
 }
