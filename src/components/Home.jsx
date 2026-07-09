@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { listarRecorridos } from '../lib/catalogo';
 import { guardarConfig } from '../lib/almacenamiento';
-import { irA, linkClientes, linkEditor, linkVisor, pedirPantallaCompleta, resolverUrl } from '../lib/rutas';
+import { irA, linkClientes, linkEditor, linkPropuesta, linkVisor, pedirPantallaCompleta, resolverUrl } from '../lib/rutas';
 import { genId, slugify } from '../lib/imagenes';
 import Logo from './Logo';
 
@@ -68,12 +68,14 @@ export default function Home() {
             {g.items.map((r) => (
               <li key={r.id} className="card">
                 <a
-                  className="card-media"
+                  className={`card-media ${r.tipo === 'propuesta' ? 'card-media-propuesta' : ''}`}
                   href={linkVisor(r.id)}
                   onClick={pedirPantallaCompleta}
                 >
                   {r.portada ? (
                     <img src={resolverUrl(r.portada)} alt="" loading="lazy" />
+                  ) : r.tipo === 'propuesta' ? (
+                    <div className="card-media-vacia">🗺️ {r.lugares} {r.lugares === 1 ? 'lugar' : 'lugares'}</div>
                   ) : (
                     <div className="card-media-vacia">Sin fotos todavía</div>
                   )}
@@ -83,17 +85,27 @@ export default function Home() {
                   <a className="card-nombre" href={linkVisor(r.id)} onClick={pedirPantallaCompleta}>
                     {r.nombre}
                   </a>
-                  <span className="card-stats">
-                    {r.paradas} {r.paradas === 1 ? 'parada' : 'paradas'} · {r.soportes}{' '}
-                    {r.soportes === 1 ? 'soporte' : 'soportes'}
-                  </span>
+                  {r.tipo === 'propuesta' ? (
+                    <span className="card-stats">{r.lugares} {r.lugares === 1 ? 'lugar combinado' : 'lugares combinados'}</span>
+                  ) : (
+                    <span className="card-stats">
+                      {r.paradas} {r.paradas === 1 ? 'parada' : 'paradas'} · {r.soportes}{' '}
+                      {r.soportes === 1 ? 'soporte' : 'soportes'}
+                    </span>
+                  )}
                   <div className="card-acciones">
                     <a className="btn-cta btn-chico" href={linkVisor(r.id)} onClick={pedirPantallaCompleta}>
-                      Ver recorrido →
+                      Ver {r.tipo === 'propuesta' ? 'propuesta' : 'recorrido'} →
                     </a>
                     <div className="card-links">
-                      <a className="card-editar" href={linkClientes(r.id)}>👤 Clientes</a>
-                      <a className="card-editar" href={linkEditor(r.id)}>✎ Armar</a>
+                      {r.tipo === 'propuesta' ? (
+                        <a className="card-editar" href={linkPropuesta(r.id)}>✎ Editar lugares</a>
+                      ) : (
+                        <>
+                          <a className="card-editar" href={linkClientes(r.id)}>👤 Clientes</a>
+                          <a className="card-editar" href={linkEditor(r.id)}>✎ Armar</a>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -123,6 +135,16 @@ export default function Home() {
           </button>
         </div>
         <p className="panel-hint">Se crea vacío; después subís las fotos y calibrás los soportes en el editor.</p>
+      </section>
+
+      <section className="home-nuevo">
+        <h2>Nueva propuesta</h2>
+        <p className="panel-hint" style={{ marginTop: 0 }}>
+          Combiná varios lugares ya armados (ej. Colonia + Paysandú + un bus) en un solo recorrido para el cliente.
+        </p>
+        <a className="btn-secundario" href={linkPropuesta('nueva')} style={{ display: 'inline-block' }}>
+          + Crear propuesta
+        </a>
       </section>
 
       <footer className="home-pie">

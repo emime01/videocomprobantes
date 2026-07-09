@@ -1303,3 +1303,112 @@ a.marca {
     flex-direction: column;
   }
 }
+
+/* ── Propuestas ──────────────────────────────────────────────────────── */
+
+.card-media-propuesta .card-media-vacia {
+  background: linear-gradient(135deg, rgba(235, 105, 28, 0.28), rgba(235, 105, 28, 0.08));
+  color: var(--texto);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.prop-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prop-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.prop-item-on {
+  border-color: rgba(235, 105, 28, 0.5);
+}
+
+.prop-orden {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--naranja);
+  color: #fff;
+  font-weight: 800;
+  border-radius: 999px;
+  font-size: 0.82rem;
+}
+
+.prop-nombre {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.prop-nombre em {
+  font-style: normal;
+  color: var(--texto-suave);
+  font-weight: 400;
+  font-size: 0.82rem;
+}
+
+.prop-item .panel-punto-acciones button {
+  background: transparent;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+}
+
+/* Cartel al entrar a un lugar nuevo dentro de una propuesta */
+.lugar-banner {
+  position: fixed;
+  top: 22%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 28px;
+  background: rgba(14, 15, 18, 0.82);
+  border: 1px solid rgba(235, 105, 28, 0.5);
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+  animation: lugar-in 1.7s ease both;
+  pointer-events: none;
+}
+
+.lugar-banner span {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.lugar-banner strong {
+  font-size: 1.4rem;
+  color: var(--naranja-vivo);
+}
+
+@keyframes lugar-in {
+  0% { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  14%, 78% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lugar-banner { animation: none; }
+}

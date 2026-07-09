@@ -25,6 +25,7 @@ export function parseRuta() {
   let vista = 'visor';
   if (partes[1] === 'editor') vista = 'editor';
   else if (partes[1] === 'clientes') vista = 'clientes';
+  else if (partes[1] === 'propuesta') vista = 'propuesta';
   return { vista, recorridoId, clienteId };
 }
 
@@ -63,6 +64,10 @@ export function linkEditor(recorridoId) {
 
 export function linkClientes(recorridoId) {
   return `#/${recorridoId}/clientes`;
+}
+
+export function linkPropuesta(propuestaId) {
+  return `#/${propuestaId}/propuesta`;
 }
 
 // Link público absoluto de un cliente para un recorrido (para "copiar link").

@@ -1,6 +1,7 @@
 import { BASE } from './rutas';
 import { cargarConfig, listarRecorridosLocales } from './almacenamiento';
 import { obtenerRecorridoRemoto, obtenerShoppingsRemoto, remotoDisponible } from './supabase';
+import { combinarPropuesta } from './propuesta';
 
 // Fuente de datos según el entorno:
 // - Con Supabase configurado (Fase 3): las tablas remotas son la verdad; lo
@@ -20,6 +21,19 @@ async function cargarData() {
 
 // Resumen liviano para la home (portada + números que venden).
 export function resumenRecorrido(r) {
+  if (r.tipo === 'propuesta') {
+    return {
+      id: r.id,
+      nombre: r.nombre || r.id,
+      categoria: r.categoria || 'Propuestas',
+      tipo: 'propuesta',
+      incluye: r.incluye || [],
+      lugares: (r.incluye || []).length,
+      portada: null,
+      paradas: 0,
+      soportes: 0,
+    };
+  }
   return {
     id: r.id,
     nombre: r.nombre || r.id,
@@ -63,13 +77,12 @@ export function linkConsulta(contacto, texto) {
   return `mailto:${email}?subject=${encodeURIComponent('Consulta por soportes publicitarios')}&body=${encodeURIComponent(texto)}`;
 }
 
-// Config completo de un recorrido. Devuelve { shopping, clientes } o null.
-export async function cargarRecorrido(recorridoId) {
+// Resolución cruda de un recorrido (sin expandir propuestas). null si no existe.
+async function resolverRecorrido(recorridoId) {
   if (remotoDisponible) {
     const remoto = await obtenerRecorridoRemoto(recorridoId);
     if (remoto) return remoto;
-    // Borrador local todavía no publicado (o null si no existe).
-    return cargarConfig(recorridoId);
+    return cargarConfig(recorridoId); // borrador local no publicado
   }
   const local = cargarConfig(recorridoId);
   if (local) return local;
@@ -83,4 +96,21 @@ export async function cargarRecorrido(recorridoId) {
     artes: { ...c.artes },
   }));
   return { shopping, clientes };
+}
+
+// Config completo de un recorrido. Si es una propuesta, la expande en un tour
+// continuo combinando los recorridos incluidos. Devuelve { shopping, clientes }.
+export async function cargarRecorrido(recorridoId) {
+  const base = await resolverRecorrido(recorridoId);
+  if (!base) return null;
+  if (base.shopping?.tipo !== 'propuesta') return base;
+
+  const incluidos = [];
+  for (const rid of base.shopping.incluye || []) {
+    const inc = await resolverRecorrido(rid);
+    if (inc && inc.shopping?.tipo !== 'propuesta') {
+      incluidos.push({ recorridoId: rid, shopping: inc.shopping, clientes: inc.clientes });
+    }
+  }
+  return combinarPropuesta(base.shopping, incluidos);
 }

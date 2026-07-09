@@ -18,6 +18,8 @@ export default function Visor({ shopping, clienteId }) {
   const [contacto, setContacto] = useState(null);
   const [autoplay, setAutoplay] = useState(false);
   const [cierre, setCierre] = useState(false); // pantalla de cierre al terminar
+  const [lugarBanner, setLugarBanner] = useState(''); // cartel al cambiar de lugar (propuestas)
+  const lugarPrevRef = useRef(null);
 
   // Apertura: solo cuando el link trae cliente. Una vez por sesión.
   const splashKey = `splash:${shopping.id}:${clienteId || ''}`;
@@ -86,6 +88,19 @@ export default function Visor({ shopping, clienteId }) {
     const t = setTimeout(() => setMontarArte(true), 30);
     return () => clearTimeout(t);
   }, [punto?.id]);
+
+  // En una propuesta, al entrar a un lugar nuevo mostramos un cartel breve.
+  useEffect(() => {
+    const lugar = punto?.lugar;
+    if (!lugar) return;
+    if (lugarPrevRef.current !== null && lugarPrevRef.current !== lugar) {
+      setLugarBanner(lugar);
+      const t = setTimeout(() => setLugarBanner(''), 1700);
+      lugarPrevRef.current = lugar;
+      return () => clearTimeout(t);
+    }
+    lugarPrevRef.current = lugar;
+  }, [punto?.id, punto?.lugar]);
 
   // Navegación con flechas del teclado.
   useEffect(() => {
@@ -162,7 +177,7 @@ export default function Visor({ shopping, clienteId }) {
           <Logo />
         </a>
         <div className="visor-titulo">
-          <strong>{shopping.nombre}</strong>
+          <strong>{punto.lugar || shopping.nombre}</strong>
           <span>
             {punto.nombre} · parada {indice + 1} de {shopping.puntos.length}
           </span>
@@ -290,6 +305,13 @@ export default function Visor({ shopping, clienteId }) {
               Ver el recorrido de nuevo
             </button>
           </div>
+        </div>
+      )}
+
+      {lugarBanner && (
+        <div className="lugar-banner">
+          <span>Ahora en</span>
+          <strong>{lugarBanner}</strong>
         </div>
       )}
 
