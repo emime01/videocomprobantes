@@ -48,6 +48,20 @@ export function listarRecorridosLocales() {
       try {
         const cfg = JSON.parse(localStorage.getItem(k));
         if (!cfg.id) continue;
+        if (cfg.tipo === 'propuesta') {
+          out.push({
+            id: cfg.id,
+            nombre: cfg.nombre || cfg.id,
+            categoria: cfg.categoria || 'Propuestas',
+            tipo: 'propuesta',
+            incluye: cfg.incluye || [],
+            lugares: (cfg.incluye || []).length,
+            portada: null,
+            paradas: 0,
+            soportes: 0,
+          });
+          continue;
+        }
         out.push({
           id: cfg.id,
           nombre: cfg.nombre || cfg.id,

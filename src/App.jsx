@@ -3,6 +3,7 @@ import Home from './components/Home';
 import Visor from './components/Visor';
 import Editor from './components/Editor';
 import ClientesEditor from './components/ClientesEditor';
+import PropuestaEditor from './components/PropuestaEditor';
 import { irA, parseRuta } from './lib/rutas';
 import { cargarRecorrido } from './lib/catalogo';
 
@@ -67,6 +68,8 @@ export default function App() {
     return <Editor key={ruta.recorridoId} recorridoId={ruta.recorridoId} onVolver={() => irA('/')} />;
   if (ruta.vista === 'clientes')
     return <ClientesEditor key={ruta.recorridoId} recorridoId={ruta.recorridoId} onVolver={() => irA('/')} />;
+  if (ruta.vista === 'propuesta')
+    return <PropuestaEditor key={ruta.recorridoId} recorridoId={ruta.recorridoId} onVolver={() => irA('/')} />;
   return (
     <VisorRecorrido key={ruta.recorridoId} recorridoId={ruta.recorridoId} clienteId={ruta.clienteId} />
   );
