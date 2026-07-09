@@ -22,7 +22,9 @@ export function parseRuta() {
   const partes = window.location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   if (partes.length === 0) return { vista: 'home', clienteId };
   const recorridoId = partes[0];
-  const vista = partes[1] === 'editor' ? 'editor' : 'visor';
+  let vista = 'visor';
+  if (partes[1] === 'editor') vista = 'editor';
+  else if (partes[1] === 'clientes') vista = 'clientes';
   return { vista, recorridoId, clienteId };
 }
 
@@ -57,6 +59,10 @@ export function linkVisor(recorridoId) {
 
 export function linkEditor(recorridoId) {
   return `#/${recorridoId}/editor`;
+}
+
+export function linkClientes(recorridoId) {
+  return `#/${recorridoId}/clientes`;
 }
 
 // Link público absoluto de un cliente para un recorrido (para "copiar link").

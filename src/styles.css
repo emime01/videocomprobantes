@@ -1201,3 +1201,105 @@ a.marca {
     font-size: 0.8rem;
   }
 }
+
+/* ── Modo Clientes (asignar artes sobre un recorrido armado) ─────────── */
+
+.clientes-modo {
+  height: 100dvh;
+  display: flex;
+}
+
+.card-links {
+  display: flex;
+  gap: 12px;
+}
+
+.clientes-parada {
+  margin-bottom: 12px;
+}
+
+.clientes-parada h4 {
+  margin: 8px 0 6px;
+  font-size: 0.78rem;
+  color: var(--texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.clientes-soporte {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.cs-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.cs-nombre {
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cs-vacio {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--borde);
+  border-radius: 4px;
+  color: var(--texto-suave);
+  flex-shrink: 0;
+}
+
+.cliente-fila {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cliente-fila-activa .cliente-elegir {
+  border-color: var(--naranja);
+  color: var(--naranja);
+}
+
+.cliente-elegir {
+  flex: 1;
+  text-align: left;
+  background: transparent;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.cliente-fila > button:not(.cliente-elegir) {
+  background: transparent;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 0.72rem;
+}
+
+.cliente-link {
+  margin-top: 10px;
+  width: 100%;
+  text-align: center;
+}
+
+@media (max-width: 800px) {
+  .clientes-modo {
+    flex-direction: column;
+  }
+}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { listarRecorridos } from '../lib/catalogo';
 import { guardarConfig } from '../lib/almacenamiento';
-import { irA, linkEditor, linkVisor, pedirPantallaCompleta, resolverUrl } from '../lib/rutas';
+import { irA, linkClientes, linkEditor, linkVisor, pedirPantallaCompleta, resolverUrl } from '../lib/rutas';
 import { genId, slugify } from '../lib/imagenes';
 import Logo from './Logo';
 
@@ -91,7 +91,10 @@ export default function Home() {
                     <a className="btn-cta btn-chico" href={linkVisor(r.id)} onClick={pedirPantallaCompleta}>
                       Ver recorrido →
                     </a>
-                    <a className="card-editar" href={linkEditor(r.id)}>✎ Editar</a>
+                    <div className="card-links">
+                      <a className="card-editar" href={linkClientes(r.id)}>👤 Clientes</a>
+                      <a className="card-editar" href={linkEditor(r.id)}>✎ Armar</a>
+                    </div>
                   </div>
                 </div>
               </li>

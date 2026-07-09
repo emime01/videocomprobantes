@@ -7,7 +7,8 @@ import { linkCliente, linkVisor, resolverUrl } from '../lib/rutas';
 import { borrarConfig, guardarConfig } from '../lib/almacenamiento';
 import { cargarRecorrido } from '../lib/catalogo';
 import { guardarRemoto, remotoDisponible, subirPendientes } from '../lib/supabase';
-import Logo from './Logo';
+import { borrarClave, hayClave, leerClave } from '../lib/adminKey';
+import PantallaClave from './PantallaClave';
 
 export default function Editor({ recorridoId, onVolver }) {
   const [shopping, setShopping] = useState(null);
@@ -27,15 +28,7 @@ export default function Editor({ recorridoId, onVolver }) {
 
   // Clave de administración (SPEC 5): se pide al entrar en modo remoto, se
   // guarda en sessionStorage y viaja como x-admin-key en cada escritura.
-  const [claveLista, setClaveLista] = useState(() => {
-    if (!remotoDisponible) return true;
-    try {
-      return Boolean(sessionStorage.getItem('adminKey'));
-    } catch {
-      return false;
-    }
-  });
-  const [claveInput, setClaveInput] = useState('');
+  const [claveLista, setClaveLista] = useState(() => !remotoDisponible || hayClave());
 
   const [box, setBox] = useState({ w: 0, h: 0, left: 0, top: 0 });
   const imgRef = useRef(null);
@@ -84,12 +77,7 @@ export default function Editor({ recorridoId, onVolver }) {
     // Modo remoto: primero suben las imágenes nuevas (dataURL → Storage),
     // después el config completo vía /api/guardar-config.
     setEstadoGuardado('guardando');
-    let clave = '';
-    try {
-      clave = sessionStorage.getItem('adminKey') || '';
-    } catch {
-      /* sin sessionStorage */
-    }
+    const clave = leerClave();
     try {
       const subido = await subirPendientes(shopping, clientes, clave);
       omitirMarcaRef.current = true;
@@ -100,11 +88,7 @@ export default function Editor({ recorridoId, onVolver }) {
       setEstadoGuardado('guardado');
     } catch (e) {
       if (e.status === 401) {
-        try {
-          sessionStorage.removeItem('adminKey');
-        } catch {
-          /* no-op */
-        }
+        borrarClave();
         setEstadoGuardado('error-auth');
         setClaveLista(false);
       } else {
@@ -112,19 +96,6 @@ export default function Editor({ recorridoId, onVolver }) {
         setEstadoGuardado('error');
       }
     }
-  }
-
-  function ingresarClave() {
-    const clave = claveInput.trim();
-    if (!clave) return;
-    try {
-      sessionStorage.setItem('adminKey', clave);
-    } catch {
-      /* no-op */
-    }
-    setClaveInput('');
-    setClaveLista(true);
-    if (estadoGuardado === 'error-auth') setEstadoGuardado('sin-guardar');
   }
 
   function restablecerDemo() {
@@ -403,28 +374,14 @@ export default function Editor({ recorridoId, onVolver }) {
   // Modo remoto: pedir la clave antes de mostrar el editor (SPEC 5).
   if (remotoDisponible && !claveLista)
     return (
-      <div className="splash">
-        <div className="splash-card">
-          <Logo className="logo-lg" />
-          <h2 className="clave-titulo">Editor</h2>
-          <p>Ingresá la clave de administración para editar.</p>
-          {estadoGuardado === 'error-auth' && (
-            <p className="clave-error">La clave era incorrecta, probá de nuevo.</p>
-          )}
-          <input
-            type="password"
-            className="clave-input"
-            placeholder="Clave"
-            value={claveInput}
-            onChange={(e) => setClaveInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && ingresarClave()}
-            autoFocus
-          />
-          <button type="button" className="btn-cta" onClick={ingresarClave}>
-            Entrar →
-          </button>
-        </div>
-      </div>
+      <PantallaClave
+        titulo="Editor"
+        error={estadoGuardado === 'error-auth'}
+        onOk={() => {
+          setClaveLista(true);
+          if (estadoGuardado === 'error-auth') setEstadoGuardado('sin-guardar');
+        }}
+      />
     );
 
   if (!shopping) return <div className="estado">Cargando…</div>;
