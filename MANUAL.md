@@ -18,12 +18,9 @@ Una app donde cada **soporte publicitario** (columna, banner, panel de bus, pant
 
 ## 3. La landing (Home)
 
-En `/` ves todos los recorridos agrupados por categoría: **Shoppings, Pantallas gigantes, Medianeras, Carteles en buses, Freeshops** (o cualquier otra que definas). Cada card tiene:
+En `/` ves todos los recorridos agrupados por categoría: **Shoppings, Pantallas gigantes, Medianeras, Carteles en buses, Freeshops** (o cualquier otra que definas). Es una landing **solo de lectura**, pensada para que un planner navegue el inventario: cada card tiene únicamente **Ver recorrido →**, que abre el visor público a pantalla completa. No hay botones para crear ni ícono de edición — nada de administración vive acá.
 
-- **Ver recorrido →**: abre el visor público (a pantalla completa).
-- **⚙ (ícono discreto)**: abre "Clientes" o "Armar". Sigue pidiendo tu clave de administrador si la app está conectada a Supabase — un planner no puede editar nada tocando esto.
-
-Abajo de todo: **+ Crear** un recorrido nuevo (vacío, para armar) y **+ Crear propuesta** (para combinar varios recorridos ya armados).
+Toda la administración (crear recorridos/propuestas, y el acceso a "Armar"/"Clientes" de cada uno) está en **`#/admin`**, un panel aparte al que se llega por el link discreto "Equipo Movimagen · administrar →" al pie de la landing. Ahí sí cada card tiene su ícono ⚙ con "Armar"/"Clientes", y abajo están los formularios de "+ Crear" recorrido y "+ Crear propuesta". Sigue pidiendo tu clave de administrador al guardar/publicar si la app está conectada a Supabase.
 
 ## 4. Armar un recorrido
 

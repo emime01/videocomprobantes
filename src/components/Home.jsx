@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { listarRecorridos } from '../lib/catalogo';
 import { guardarConfig } from '../lib/almacenamiento';
-import { irA, linkClientes, linkEditor, linkPropuesta, linkVisor, pedirPantallaCompleta, resolverUrl } from '../lib/rutas';
+import { irA, linkAdmin, linkClientes, linkEditor, linkPropuesta, linkVisor, pedirPantallaCompleta, resolverUrl } from '../lib/rutas';
 import { genId, slugify } from '../lib/imagenes';
 import Logo from './Logo';
 
@@ -10,7 +10,7 @@ import Logo from './Logo';
 // sigue siendo texto libre: son sugerencias, no una lista cerrada.
 const CATEGORIAS_SUGERIDAS = ['Shoppings', 'Pantallas gigantes', 'Medianeras', 'Carteles en buses', 'Freeshops'];
 
-export default function Home() {
+export default function Home({ admin = false }) {
   const [recorridos, setRecorridos] = useState(null);
   const [error, setError] = useState(null);
   const [nombreNuevo, setNombreNuevo] = useState('');
@@ -56,11 +56,17 @@ export default function Home() {
     <div className="home">
       <header className="home-hero">
         <Logo className="logo-lg" />
-        <h1>Recorridos virtuales</h1>
-        <p>
-          Mostrale a cada anunciante su marca montada en los soportes reales,
-          antes de imprimir un solo vinilo.
-        </p>
+        <h1>{admin ? 'Panel de administración' : 'Recorridos virtuales'}</h1>
+        {admin ? (
+          <p>
+            Creá recorridos nuevos y accedé a Armar / Clientes de cada uno. <a href="#/">← Volver a la landing</a>
+          </p>
+        ) : (
+          <p>
+            Mostrale a cada anunciante su marca montada en los soportes reales,
+            antes de imprimir un solo vinilo.
+          </p>
+        )}
       </header>
 
       {grupos.length === 0 && (
@@ -94,28 +100,30 @@ export default function Home() {
                     <a className="card-nombre" href={linkVisor(r.id)} onClick={pedirPantallaCompleta}>
                       {r.nombre}
                     </a>
-                    <div className="card-menu">
-                      <button
-                        type="button"
-                        className="card-menu-boton"
-                        aria-label="Opciones de administración"
-                        onClick={() => setMenuAbiertoId(menuAbiertoId === r.id ? null : r.id)}
-                      >
-                        ⚙
-                      </button>
-                      {menuAbiertoId === r.id && (
-                        <div className="card-menu-dropdown">
-                          {r.tipo === 'propuesta' ? (
-                            <a href={linkPropuesta(r.id)}>✎ Editar lugares</a>
-                          ) : (
-                            <>
-                              <a href={linkClientes(r.id)}>👤 Clientes</a>
-                              <a href={linkEditor(r.id)}>✎ Armar</a>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    {admin && (
+                      <div className="card-menu">
+                        <button
+                          type="button"
+                          className="card-menu-boton"
+                          aria-label="Opciones de administración"
+                          onClick={() => setMenuAbiertoId(menuAbiertoId === r.id ? null : r.id)}
+                        >
+                          ⚙
+                        </button>
+                        {menuAbiertoId === r.id && (
+                          <div className="card-menu-dropdown">
+                            {r.tipo === 'propuesta' ? (
+                              <a href={linkPropuesta(r.id)}>✎ Editar lugares</a>
+                            ) : (
+                              <>
+                                <a href={linkClientes(r.id)}>👤 Clientes</a>
+                                <a href={linkEditor(r.id)}>✎ Armar</a>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   {r.tipo === 'propuesta' ? (
                     <span className="card-stats">{r.lugares} {r.lugares === 1 ? 'lugar combinado' : 'lugares combinados'}</span>
@@ -135,47 +143,56 @@ export default function Home() {
         </section>
       ))}
 
-      <section className="home-nuevo">
-        <h2>Nuevo recorrido</h2>
-        <div className="home-nuevo-campos">
-          <input
-            type="text"
-            placeholder="Nombre (ej. Shopping Tres Cruces)"
-            value={nombreNuevo}
-            onChange={(e) => setNombreNuevo(e.target.value)}
-          />
-          <input
-            type="text"
-            list="categorias-sugeridas"
-            placeholder="Categoría (ej. Shoppings)"
-            value={categoriaNueva}
-            onChange={(e) => setCategoriaNueva(e.target.value)}
-          />
-          <datalist id="categorias-sugeridas">
-            {CATEGORIAS_SUGERIDAS.map((c) => (
-              <option key={c} value={c} />
-            ))}
-          </datalist>
-          <button type="button" className="btn-secundario" onClick={crearRecorrido}>
-            + Crear
-          </button>
-        </div>
-        <p className="panel-hint">Se crea vacío; después subís las fotos y calibrás los soportes en el editor.</p>
-      </section>
+      {admin && (
+        <>
+          <section className="home-nuevo">
+            <h2>Nuevo recorrido</h2>
+            <div className="home-nuevo-campos">
+              <input
+                type="text"
+                placeholder="Nombre (ej. Shopping Tres Cruces)"
+                value={nombreNuevo}
+                onChange={(e) => setNombreNuevo(e.target.value)}
+              />
+              <input
+                type="text"
+                list="categorias-sugeridas"
+                placeholder="Categoría (ej. Shoppings)"
+                value={categoriaNueva}
+                onChange={(e) => setCategoriaNueva(e.target.value)}
+              />
+              <datalist id="categorias-sugeridas">
+                {CATEGORIAS_SUGERIDAS.map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
+              <button type="button" className="btn-secundario" onClick={crearRecorrido}>
+                + Crear
+              </button>
+            </div>
+            <p className="panel-hint">Se crea vacío; después subís las fotos y calibrás los soportes en el editor.</p>
+          </section>
 
-      <section className="home-nuevo">
-        <h2>Nueva propuesta</h2>
-        <p className="panel-hint" style={{ marginTop: 0 }}>
-          Combiná varios lugares ya armados (ej. Colonia + Paysandú + un bus) en un solo recorrido para el cliente.
-        </p>
-        <a className="btn-secundario" href={linkPropuesta('nueva')} style={{ display: 'inline-block' }}>
-          + Crear propuesta
-        </a>
-      </section>
+          <section className="home-nuevo">
+            <h2>Nueva propuesta</h2>
+            <p className="panel-hint" style={{ marginTop: 0 }}>
+              Combiná varios lugares ya armados (ej. Colonia + Paysandú + un bus) en un solo recorrido para el cliente.
+            </p>
+            <a className="btn-secundario" href={linkPropuesta('nueva')} style={{ display: 'inline-block' }}>
+              + Crear propuesta
+            </a>
+          </section>
+        </>
+      )}
 
       <footer className="home-pie">
         <Logo className="logo-pie" />
         <span>Publicidad que se ve.</span>
+        {!admin && (
+          <a className="home-link-admin" href={linkAdmin()}>
+            Equipo Movimagen · administrar →
+          </a>
+        )}
       </footer>
     </div>
   );

@@ -969,6 +969,17 @@ a.marca {
   letter-spacing: 0.04em;
 }
 
+.home-link-admin {
+  color: var(--texto-suave);
+  text-decoration: none;
+  opacity: 0.6;
+}
+
+.home-link-admin:hover {
+  opacity: 1;
+  color: var(--naranja);
+}
+
 .logo-pie {
   height: 20px;
   opacity: 0.85;
