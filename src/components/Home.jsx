@@ -40,10 +40,16 @@ export default function Home({ admin = false }) {
   if (error) return <div className="estado estado-error">{error}</div>;
   if (!recorridos) return <div className="estado">Cargando…</div>;
 
+  // Las propuestas combinan lugares para un cliente puntual: en la landing
+  // pública (la puede abrir cualquiera) no corresponde que aparezcan, porque
+  // expondría a un cliente las propuestas armadas para otro. Solo se ven en
+  // el panel de administración.
+  const visibles = admin ? recorridos : recorridos.filter((r) => r.tipo !== 'propuesta');
+
   // Agrupar por categoría, manteniendo orden de aparición.
   const grupos = [];
   const indice = new Map();
-  for (const r of recorridos) {
+  for (const r of visibles) {
     const cat = r.categoria || 'Sin categoría';
     if (!indice.has(cat)) {
       indice.set(cat, grupos.length);
