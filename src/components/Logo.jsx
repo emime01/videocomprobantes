@@ -1,8 +1,9 @@
 import { resolverUrl } from '../lib/rutas';
 
-// Logo oficial Movimagen. variante: 'blanco' (fondo oscuro) | 'naranja' (fondo claro).
-export default function Logo({ variante = 'blanco', className = '', alt = 'Movimagen · Publicidad OOH' }) {
-  const src = resolverUrl(variante === 'naranja' ? '/marca/wordmark-naranja.png' : '/marca/wordmark-blanco.png');
+// Logo oficial Movimagen. variante: 'naranja' (fondo claro, default — la app
+// es blanco y naranja) | 'blanco' (para los pocos fondos oscuros, ej. el stage).
+export default function Logo({ variante = 'naranja', className = '', alt = 'Movimagen · Publicidad OOH' }) {
+  const src = resolverUrl(variante === 'blanco' ? '/marca/wordmark-blanco.png' : '/marca/wordmark-naranja.png');
   return <img src={src} alt={alt} className={`logo ${className}`} draggable={false} />;
 }
 

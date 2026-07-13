@@ -64,6 +64,7 @@ export default function App() {
   }, []);
 
   if (ruta.vista === 'home') return <Home />;
+  if (ruta.vista === 'admin') return <Home admin />;
   if (ruta.vista === 'editor')
     return <Editor key={ruta.recorridoId} recorridoId={ruta.recorridoId} onVolver={() => irA('/')} />;
   if (ruta.vista === 'clientes')

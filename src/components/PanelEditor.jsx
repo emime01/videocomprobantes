@@ -1,5 +1,4 @@
-import { useRef, useState } from 'react';
-import { resolverUrl } from '../lib/rutas';
+import { useRef } from 'react';
 
 function FileButton({ children, accept = 'image/*', onFile, ...props }) {
   const inputRef = useRef(null);
@@ -28,16 +27,12 @@ export default function PanelEditor({
   punto,
   remoto = false,
   onEditarRecorrido,
-  clientes,
-  clienteActivoId,
   soporteSeleccionado,
   hotspotSeleccionado,
-  todosLosSoportes,
   zoom,
   mostrarLuz,
   onSetZoom,
   onSetMostrarLuz,
-  onSetClienteActivoId,
   onEditarSoporte,
   onEliminarSoporte,
   onCrearSoporte,
@@ -50,16 +45,11 @@ export default function PanelEditor({
   onEliminarPunto,
   onMoverPunto,
   onCrearPunto,
-  onCrearCliente,
-  onEliminarCliente,
-  onSubirArte,
-  onQuitarArte,
-  onCopiarLink,
   onExportarJSON,
   onImportarJSON,
   onRestablecerDemo,
+  linkClientesUrl,
 }) {
-  const [nombreClienteNuevo, setNombreClienteNuevo] = useState('');
   const hotspot = punto && hotspotSeleccionado != null ? punto.hotspots[hotspotSeleccionado] : null;
 
   return (
@@ -85,6 +75,11 @@ export default function PanelEditor({
             />
           </label>
         </div>
+        {linkClientesUrl && (
+          <a className="panel-link-clientes" href={linkClientesUrl}>
+            👤 Cargar imágenes de un cliente →
+          </a>
+        )}
       </section>
 
       {punto && (
@@ -111,10 +106,20 @@ export default function PanelEditor({
                 <option value="h">Horizontal</option>
               </select>
             </label>
+            <label>
+              Capa del arte
+              <select
+                value={soporteSeleccionado.capa || 'encima'}
+                onChange={(e) => onEditarSoporte(soporteSeleccionado.id, { capa: e.target.value })}
+              >
+                <option value="encima">Encima de la foto (normal)</option>
+                <option value="debajo">Debajo de la foto (foto con hueco transparente)</option>
+              </select>
+            </label>
             <p className="panel-hint">Arrastrá las 4 esquinas sobre la foto para calibrar el soporte.</p>
             <label className="panel-checkbox">
               <input type="checkbox" checked={zoom} onChange={(e) => onSetZoom(e.target.checked)} />
-              Zoom 2x para calibrar fino
+              Zoom 16x para calibrar fino
             </label>
             <button type="button" className="btn-peligro" onClick={() => onEliminarSoporte(soporteSeleccionado.id)}>
               Eliminar soporte
@@ -221,73 +226,6 @@ export default function PanelEditor({
         <FileButton className="btn-secundario" onFile={onCrearPunto}>
           + Punto (subir foto)
         </FileButton>
-      </section>
-
-      <section className="panel-seccion">
-        <h3>Clientes y artes</h3>
-        <div className="panel-cliente-nuevo">
-          <input
-            type="text"
-            placeholder="Nombre del cliente"
-            value={nombreClienteNuevo}
-            onChange={(e) => setNombreClienteNuevo(e.target.value)}
-          />
-          <button
-            type="button"
-            className="btn-secundario"
-            onClick={() => {
-              if (!nombreClienteNuevo.trim()) return;
-              onCrearCliente(nombreClienteNuevo.trim());
-              setNombreClienteNuevo('');
-            }}
-          >
-            + Cliente
-          </button>
-        </div>
-        <ul className="panel-lista">
-          {clientes.map((c) => (
-            <li key={c.id} className="panel-cliente-item">
-              <label className="panel-cliente-radio">
-                <input
-                  type="radio"
-                  name="cliente-activo"
-                  checked={clienteActivoId === c.id}
-                  onChange={() => onSetClienteActivoId(c.id)}
-                />
-                {c.nombre}
-              </label>
-              <div className="panel-punto-acciones">
-                <button type="button" onClick={() => onCopiarLink(c.id)}>Copiar link</button>
-                <button type="button" className="btn-peligro" onClick={() => onEliminarCliente(c.id)}>✕</button>
-              </div>
-            </li>
-          ))}
-        </ul>
-
-        {clienteActivoId && (
-          <div className="panel-artes">
-            <p className="panel-hint">Artes de {clientes.find((c) => c.id === clienteActivoId)?.nombre}, por soporte:</p>
-            {todosLosSoportes.map((s) => {
-              const url = clientes.find((c) => c.id === clienteActivoId)?.artes?.[s.id];
-              return (
-                <div key={s.id} className="panel-arte-item">
-                  <span>{s.puntoNombre} · {s.nombre}</span>
-                  {url && <img src={resolverUrl(url)} alt="" className="panel-arte-thumb" />}
-                  <div className="panel-punto-acciones">
-                    <FileButton onFile={(file) => onSubirArte(clienteActivoId, s.id, file)}>
-                      {url ? 'Reemplazar' : 'Subir'}
-                    </FileButton>
-                    {url && (
-                      <button type="button" className="btn-peligro" onClick={() => onQuitarArte(clienteActivoId, s.id)}>
-                        Quitar
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </section>
 
       <section className="panel-seccion">

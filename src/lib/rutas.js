@@ -13,7 +13,8 @@ export function resolverUrl(u) {
 }
 
 // Ruteo por hash (funciona en GitHub Pages sin rewrites de servidor):
-//   #/                       -> home (lista de recorridos)
+//   #/                       -> home (landing pública, solo mirar)
+//   #/admin                  -> panel para crear/administrar recorridos
 //   #/{recorridoId}          -> visor de ese recorrido
 //   #/{recorridoId}/editor   -> editor de ese recorrido
 // El cliente para el visor viaja como query (?cliente=slug).
@@ -21,6 +22,7 @@ export function parseRuta() {
   const clienteId = new URLSearchParams(window.location.search).get('cliente');
   const partes = window.location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   if (partes.length === 0) return { vista: 'home', clienteId };
+  if (partes.length === 1 && partes[0] === 'admin') return { vista: 'admin', clienteId };
   const recorridoId = partes[0];
   let vista = 'visor';
   if (partes[1] === 'editor') vista = 'editor';
@@ -68,6 +70,10 @@ export function linkClientes(recorridoId) {
 
 export function linkPropuesta(propuestaId) {
   return `#/${propuestaId}/propuesta`;
+}
+
+export function linkAdmin() {
+  return '#/admin';
 }
 
 // Link público absoluto de un cliente para un recorrido (para "copiar link").
