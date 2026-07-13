@@ -97,6 +97,26 @@ export default function ClientesEditor({ recorridoId, onVolver }) {
     );
   }
 
+  // Sube un solo arte y lo aplica a TODOS los soportes de esa orientación en
+  // TODO el recorrido (todos los verticales juntos, todos los horizontales
+  // juntos). No aplica a Buses: sus soportes tienen formas más específicas
+  // (frente/lateral/trasera) y conviene cargarlos uno por uno.
+  async function subirArteMasivo(orientacion, file) {
+    if (!clienteActivoId) return;
+    const url = await comprimirArte(file);
+    const idsDeEsaOrientacion = shopping.puntos.flatMap((p) =>
+      p.soportes.filter((s) => s.orientacion === orientacion).map((s) => s.id)
+    );
+    setClientes((prev) =>
+      prev.map((c) => {
+        if (c.id !== clienteActivoId) return c;
+        const artes = { ...c.artes };
+        for (const id of idsDeEsaOrientacion) artes[id] = url;
+        return { ...c, artes };
+      })
+    );
+  }
+
   function quitarArte(soporteId) {
     setClientes((prev) =>
       prev.map((c) => {
@@ -166,6 +186,9 @@ export default function ClientesEditor({ recorridoId, onVolver }) {
   const artesCargados = clienteActivo
     ? shopping.puntos.reduce((a, p) => a + p.soportes.filter((s) => clienteActivo.artes?.[s.id]).length, 0)
     : 0;
+  const esBus = shopping.categoria === 'Buses';
+  const totalVerticales = shopping.puntos.reduce((a, p) => a + p.soportes.filter((s) => s.orientacion === 'v').length, 0);
+  const totalHorizontales = shopping.puntos.reduce((a, p) => a + p.soportes.filter((s) => s.orientacion === 'h').length, 0);
 
   return (
     <div className="clientes-modo">
@@ -194,9 +217,14 @@ export default function ClientesEditor({ recorridoId, onVolver }) {
         <div className="editor-stage">
           {puntoPreview ? (
             <>
+              <div className="editor-overlay-capa editor-overlay-detras" style={{ left: box.left, top: box.top, width: box.w, height: box.h }}>
+                {puntoPreview.soportes.filter((s) => s.capa === 'debajo').map((s) => (
+                  <ZonaSoporte key={s.id} soporte={s} size={box} arteUrl={resolverUrl(clienteActivo?.artes?.[s.id])} />
+                ))}
+              </div>
               <img ref={imgRef} src={resolverUrl(puntoPreview.foto)} alt={puntoPreview.nombre} className="visor-foto" draggable={false} />
               <div className="visor-overlay-capa" style={{ left: box.left, top: box.top, width: box.w, height: box.h }}>
-                {puntoPreview.soportes.map((s) => (
+                {puntoPreview.soportes.filter((s) => s.capa !== 'debajo').map((s) => (
                   <ZonaSoporte key={s.id} soporte={s} size={box} arteUrl={resolverUrl(clienteActivo?.artes?.[s.id])} />
                 ))}
               </div>
@@ -252,8 +280,30 @@ export default function ClientesEditor({ recorridoId, onVolver }) {
           <section className="panel-seccion">
             <h3>Imágenes de {clienteActivo.nombre}</h3>
             <p className="panel-hint">
-              {artesCargados} de {soportesTotales} soportes con imagen. Subí el arte de cada uno.
+              {artesCargados} de {soportesTotales} soportes con imagen.
             </p>
+
+            {!esBus && (totalVerticales > 0 || totalHorizontales > 0) && (
+              <div className="carga-masiva">
+                <p className="panel-hint" style={{ marginTop: 0 }}>
+                  Subí una imagen por formato: se aplica a todos los soportes de ese formato en el recorrido.
+                </p>
+                <div className="carga-masiva-botones">
+                  {totalVerticales > 0 && (
+                    <FileArte onFile={(f) => subirArteMasivo('v', f)}>
+                      ▮ Arte vertical (todos · {totalVerticales})
+                    </FileArte>
+                  )}
+                  {totalHorizontales > 0 && (
+                    <FileArte onFile={(f) => subirArteMasivo('h', f)}>
+                      ▭ Arte horizontal (todos · {totalHorizontales})
+                    </FileArte>
+                  )}
+                </div>
+                <p className="panel-hint">O subilo soporte por soporte más abajo:</p>
+              </div>
+            )}
+
             {shopping.puntos.map((p) => (
               <div key={p.id} className="clientes-parada">
                 <h4>{p.nombre}</h4>

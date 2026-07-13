@@ -5,11 +5,17 @@ import { irA, linkClientes, linkEditor, linkPropuesta, linkVisor, pedirPantallaC
 import { genId, slugify } from '../lib/imagenes';
 import Logo from './Logo';
 
+// Categorías sugeridas para que los recorridos se agrupen de forma
+// consistente en la landing (planners navegan por estos rubros). El campo
+// sigue siendo texto libre: son sugerencias, no una lista cerrada.
+const CATEGORIAS_SUGERIDAS = ['Shoppings', 'Pantallas gigantes', 'Medianeras', 'Carteles en buses', 'Freeshops'];
+
 export default function Home() {
   const [recorridos, setRecorridos] = useState(null);
   const [error, setError] = useState(null);
   const [nombreNuevo, setNombreNuevo] = useState('');
   const [categoriaNueva, setCategoriaNueva] = useState('');
+  const [menuAbiertoId, setMenuAbiertoId] = useState(null);
 
   useEffect(() => {
     document.title = 'Movimagen · Recorridos virtuales';
@@ -61,6 +67,8 @@ export default function Home() {
         <p className="panel-hint">Todavía no hay recorridos. Creá el primero abajo.</p>
       )}
 
+      {menuAbiertoId && <div className="home-menu-backdrop" onClick={() => setMenuAbiertoId(null)} />}
+
       {grupos.map((g) => (
         <section key={g.categoria} className="home-grupo">
           <h2>{g.categoria}</h2>
@@ -82,9 +90,33 @@ export default function Home() {
                   <span className="card-badge">{r.categoria}</span>
                 </a>
                 <div className="card-body">
-                  <a className="card-nombre" href={linkVisor(r.id)} onClick={pedirPantallaCompleta}>
-                    {r.nombre}
-                  </a>
+                  <div className="card-titulo-fila">
+                    <a className="card-nombre" href={linkVisor(r.id)} onClick={pedirPantallaCompleta}>
+                      {r.nombre}
+                    </a>
+                    <div className="card-menu">
+                      <button
+                        type="button"
+                        className="card-menu-boton"
+                        aria-label="Opciones de administración"
+                        onClick={() => setMenuAbiertoId(menuAbiertoId === r.id ? null : r.id)}
+                      >
+                        ⚙
+                      </button>
+                      {menuAbiertoId === r.id && (
+                        <div className="card-menu-dropdown">
+                          {r.tipo === 'propuesta' ? (
+                            <a href={linkPropuesta(r.id)}>✎ Editar lugares</a>
+                          ) : (
+                            <>
+                              <a href={linkClientes(r.id)}>👤 Clientes</a>
+                              <a href={linkEditor(r.id)}>✎ Armar</a>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   {r.tipo === 'propuesta' ? (
                     <span className="card-stats">{r.lugares} {r.lugares === 1 ? 'lugar combinado' : 'lugares combinados'}</span>
                   ) : (
@@ -93,21 +125,9 @@ export default function Home() {
                       {r.soportes === 1 ? 'soporte' : 'soportes'}
                     </span>
                   )}
-                  <div className="card-acciones">
-                    <a className="btn-cta btn-chico" href={linkVisor(r.id)} onClick={pedirPantallaCompleta}>
-                      Ver {r.tipo === 'propuesta' ? 'propuesta' : 'recorrido'} →
-                    </a>
-                    <div className="card-links">
-                      {r.tipo === 'propuesta' ? (
-                        <a className="card-editar" href={linkPropuesta(r.id)}>✎ Editar lugares</a>
-                      ) : (
-                        <>
-                          <a className="card-editar" href={linkClientes(r.id)}>👤 Clientes</a>
-                          <a className="card-editar" href={linkEditor(r.id)}>✎ Armar</a>
-                        </>
-                      )}
-                    </div>
-                  </div>
+                  <a className="btn-cta btn-chico card-ver" href={linkVisor(r.id)} onClick={pedirPantallaCompleta}>
+                    Ver {r.tipo === 'propuesta' ? 'propuesta' : 'recorrido'} →
+                  </a>
                 </div>
               </li>
             ))}
@@ -126,10 +146,16 @@ export default function Home() {
           />
           <input
             type="text"
-            placeholder="Categoría (ej. Shoppings, Buses)"
+            list="categorias-sugeridas"
+            placeholder="Categoría (ej. Shoppings)"
             value={categoriaNueva}
             onChange={(e) => setCategoriaNueva(e.target.value)}
           />
+          <datalist id="categorias-sugeridas">
+            {CATEGORIAS_SUGERIDAS.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
           <button type="button" className="btn-secundario" onClick={crearRecorrido}>
             + Crear
           </button>

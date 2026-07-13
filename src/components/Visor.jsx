@@ -74,13 +74,14 @@ export default function Visor({ shopping, clienteId }) {
     return () => ro.disconnect();
   }, [punto?.id]);
 
-  // Precarga las fotos de los puntos vecinos.
+  // Precarga TODAS las fotos del recorrido apenas se abre (no solo las
+  // vecinas): en una propuesta con varios lugares, cruzar de uno a otro no
+  // debe esperar la descarga de la primera foto de ese lugar.
   useEffect(() => {
-    punto?.hotspots?.forEach((h) => {
-      const destino = shopping.puntos.find((p) => p.id === h.to);
-      if (destino) new Image().src = resolverUrl(destino.foto);
+    shopping.puntos.forEach((p) => {
+      new Image().src = resolverUrl(p.foto);
     });
-  }, [punto, shopping]);
+  }, [shopping]);
 
   // Al cambiar de parada, re-disparamos el "montaje" del arte.
   useEffect(() => {
@@ -159,6 +160,11 @@ export default function Visor({ shopping, clienteId }) {
 
   if (!punto) return null;
 
+  // Un soporte con capa:'debajo' se pinta detrás de la foto (para fotos con
+  // un hueco transparente preparado, típico en buses de forma más compleja).
+  const soportesDetras = punto.soportes.filter((s) => s.capa === 'debajo');
+  const soportesEncima = punto.soportes.filter((s) => s.capa !== 'debajo');
+
   const textoGeneral = `Hola, estuve viendo el recorrido "${shopping.nombre}"${
     cliente ? ` con la marca ${cliente.nombre}` : ''
   } y quiero más info sobre los soportes.`;
@@ -198,6 +204,23 @@ export default function Visor({ shopping, clienteId }) {
       </header>
 
       <div className="visor-stage">
+        {/* Soportes "debajo": se pintan detrás de la foto. La foto necesita un
+            hueco transparente ahí para que se vean (buses con formas complejas). */}
+        <div
+          className={`visor-overlay-capa visor-overlay-detras visor-overlay-${fase}`}
+          style={{ left: box.left, top: box.top, width: box.w, height: box.h }}
+        >
+          {soportesDetras.map((s) => (
+            <ZonaSoporte
+              key={s.id}
+              soporte={s}
+              size={box}
+              arteUrl={resolverUrl(cliente?.artes?.[s.id])}
+              montando={montarArte && !!cliente?.artes?.[s.id]}
+              onClickSoporte={() => setFicha(s)}
+            />
+          ))}
+        </div>
         <img
           ref={imgRef}
           src={resolverUrl(punto.foto)}
@@ -209,7 +232,7 @@ export default function Visor({ shopping, clienteId }) {
           className={`visor-overlay-capa visor-overlay-${fase}`}
           style={{ left: box.left, top: box.top, width: box.w, height: box.h }}
         >
-          {punto.soportes.map((s) => (
+          {soportesEncima.map((s) => (
             <ZonaSoporte
               key={s.id}
               soporte={s}
@@ -286,12 +309,11 @@ export default function Visor({ shopping, clienteId }) {
         <div className="splash cierre">
           <div className="splash-card">
             <Monograma className="cierre-mono" />
-            <h2 className="cierre-titulo">{cliente ? `¿Tu marca en todo el recorrido?` : '¿Tu marca acá?'}</h2>
+            <h2 className="cierre-titulo">¿Estás listo para llevar tu marca al siguiente nivel?</h2>
             <p className="splash-sub">
               {cliente
                 ? `Viste a ${cliente.nombre} en ${totalConArte} ${totalConArte === 1 ? 'soporte' : 'soportes'} de ${shopping.nombre}.`
                 : `${totalSoportes} ${totalSoportes === 1 ? 'soporte disponible' : 'soportes disponibles'} en ${shopping.nombre}.`}
-              <br />Hablemos y lo hacemos realidad.
             </p>
             <a
               className="btn-cta btn-cta-lg"

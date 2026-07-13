@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ZonaSoporte from './ZonaSoporte';
 import Hotspot from './Hotspot';
 import PanelEditor from './PanelEditor';
-import { comprimirArte, comprimirFoto, genId, slugify } from '../lib/imagenes';
-import { linkCliente, linkVisor, resolverUrl } from '../lib/rutas';
+import { comprimirFoto, genId } from '../lib/imagenes';
+import { linkVisor, resolverUrl } from '../lib/rutas';
 import { borrarConfig, guardarConfig } from '../lib/almacenamiento';
 import { cargarRecorrido } from '../lib/catalogo';
 import { guardarRemoto, remotoDisponible, subirPendientes } from '../lib/supabase';
@@ -18,7 +18,6 @@ export default function Editor({ recorridoId, onVolver }) {
   const [puntoActualId, setPuntoActualId] = useState(null);
   const [soporteSeleccionadoId, setSoporteSeleccionadoId] = useState(null);
   const [hotspotSeleccionado, setHotspotSeleccionado] = useState(null);
-  const [clienteActivoId, setClienteActivoId] = useState(null);
   const [zoom, setZoom] = useState(false);
   const [mostrarLuz, setMostrarLuz] = useState(true);
 
@@ -112,20 +111,10 @@ export default function Editor({ recorridoId, onVolver }) {
     () => shopping?.puntos.find((p) => p.id === puntoActualId) || null,
     [shopping, puntoActualId]
   );
-  const clienteActivo = useMemo(
-    () => clientes.find((c) => c.id === clienteActivoId) || null,
-    [clientes, clienteActivoId]
-  );
   const soporteSeleccionado = useMemo(
     () => punto?.soportes.find((s) => s.id === soporteSeleccionadoId) || null,
     [punto, soporteSeleccionadoId]
   );
-  const todosLosSoportes = useMemo(() => {
-    if (!shopping) return [];
-    return shopping.puntos.flatMap((p) =>
-      p.soportes.map((s) => ({ ...s, puntoId: p.id, puntoNombre: p.nombre }))
-    );
-  }, [shopping]);
 
   // La foto puede quedar con letterbox dentro del stage (aspect ratio propia).
   // Medimos la caja realmente renderizada de la <img> para que los porcentajes
@@ -298,42 +287,6 @@ export default function Editor({ recorridoId, onVolver }) {
     });
   }
 
-  function crearCliente(nombre) {
-    let id = slugify(nombre) || genId('c');
-    if (clientes.some((c) => c.id === id)) id = `${id}-${Math.random().toString(36).slice(2, 5)}`;
-    setClientes((prev) => [...prev, { id, nombre, artes: {} }]);
-    setClienteActivoId(id);
-  }
-
-  function eliminarCliente(clienteId) {
-    setClientes((prev) => prev.filter((c) => c.id !== clienteId));
-    if (clienteActivoId === clienteId) setClienteActivoId(null);
-  }
-
-  async function subirArte(clienteId, soporteId, file) {
-    const url = await comprimirArte(file);
-    setClientes((prev) =>
-      prev.map((c) => (c.id === clienteId ? { ...c, artes: { ...c.artes, [soporteId]: url } } : c))
-    );
-  }
-
-  function quitarArte(clienteId, soporteId) {
-    setClientes((prev) =>
-      prev.map((c) => {
-        if (c.id !== clienteId) return c;
-        const artes = { ...c.artes };
-        delete artes[soporteId];
-        return { ...c, artes };
-      })
-    );
-  }
-
-  function copiarLink(clienteId) {
-    const url = linkCliente(recorridoId, clienteId);
-    navigator.clipboard?.writeText(url);
-    return url;
-  }
-
   function exportarJSON() {
     const data = { ...shopping, clientes };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -454,7 +407,7 @@ export default function Editor({ recorridoId, onVolver }) {
             alt={punto.nombre}
             className="visor-foto"
             draggable={false}
-            style={zoomActivo ? { transform: 'scale(2)', transformOrigin: `${centroide.x}% ${centroide.y}%` } : undefined}
+            style={zoomActivo ? { transform: 'scale(16)', transformOrigin: `${centroide.x}% ${centroide.y}%` } : undefined}
           />
           <div
             className="editor-overlay-capa"
@@ -463,7 +416,7 @@ export default function Editor({ recorridoId, onVolver }) {
               top: box.top,
               width: box.w,
               height: box.h,
-              transform: zoomActivo ? 'scale(2)' : undefined,
+              transform: zoomActivo ? 'scale(16)' : undefined,
               transformOrigin: zoomActivo ? `${centroide.x}% ${centroide.y}%` : undefined,
             }}
             onPointerDown={(e) => {
@@ -477,7 +430,6 @@ export default function Editor({ recorridoId, onVolver }) {
                 key={s.id}
                 soporte={s}
                 size={box}
-                arteUrl={resolverUrl(clienteActivo?.artes?.[s.id])}
                 mostrarLuz={mostrarLuz}
                 editable
                 seleccionado={s.id === soporteSeleccionadoId}
@@ -512,16 +464,12 @@ export default function Editor({ recorridoId, onVolver }) {
         punto={punto}
         remoto={remotoDisponible}
         onEditarRecorrido={editarRecorrido}
-        clientes={clientes}
-        clienteActivoId={clienteActivoId}
         soporteSeleccionado={soporteSeleccionado}
         hotspotSeleccionado={hotspotSeleccionado}
-        todosLosSoportes={todosLosSoportes}
         zoom={zoom}
         mostrarLuz={mostrarLuz}
         onSetZoom={setZoom}
         onSetMostrarLuz={setMostrarLuz}
-        onSetClienteActivoId={setClienteActivoId}
         onEditarSoporte={editarSoporte}
         onEliminarSoporte={eliminarSoporte}
         onCrearSoporte={crearSoporte}
@@ -537,14 +485,10 @@ export default function Editor({ recorridoId, onVolver }) {
         onEliminarPunto={eliminarPunto}
         onMoverPunto={moverPunto}
         onCrearPunto={crearPunto}
-        onCrearCliente={crearCliente}
-        onEliminarCliente={eliminarCliente}
-        onSubirArte={subirArte}
-        onQuitarArte={quitarArte}
-        onCopiarLink={copiarLink}
         onExportarJSON={exportarJSON}
         onImportarJSON={importarJSON}
         onRestablecerDemo={restablecerDemo}
+        linkClientesUrl={`#/${recorridoId}/clientes`}
       />
     </div>
   );

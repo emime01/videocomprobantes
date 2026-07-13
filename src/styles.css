@@ -1,16 +1,22 @@
 :root {
-  /* Colores oficiales del manual de marca Movimagen */
+  /* Colores oficiales del manual de marca Movimagen: blanco y naranja */
   --naranja: #eb691c;       /* Pantone 1505 C */
   --naranja-vivo: #ff8438;
   --naranja-oscuro: #c9530f;
   --gris-marca: #d0d3d4;    /* Pantone 427 C */
-  --fondo: #0e0f12;
-  --panel: #15171c;
-  --borde: rgba(255, 255, 255, 0.09);
-  --texto: #f5f3f0;
-  --texto-suave: rgba(245, 243, 240, 0.6);
+  --fondo: #ffffff;
+  --panel: #f7f6f5;
+  --borde: rgba(20, 20, 20, 0.12);
+  --texto: #1c1c1c;
+  --texto-suave: rgba(28, 28, 28, 0.62);
   --radio: 14px;
-  --fuente: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* El "cine" donde se proyecta la foto (visor-stage/editor-stage) es la
+     única zona que se mantiene oscura a propósito, como una pantalla real. */
+  --stage-fondo: #000;
+  --stage-chrome: rgba(255, 255, 255, 0.94);
+  /* BC Alphapipe (tipografía del manual de marca) es de pago; Fredoka es la
+     alternativa gratuita geométrica/redondeada más cercana a su estilo. */
+  --fuente: 'Fredoka', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 * {
@@ -98,8 +104,8 @@ a.marca {
 
 .btn-peligro {
   background: transparent;
-  border: 1px solid #ff8a80;
-  color: #ff8a80;
+  border: 1px solid #d64545;
+  color: #d64545;
   border-radius: 6px;
   padding: 4px 8px;
   font-size: 0.75rem;
@@ -118,7 +124,7 @@ a.marca {
 }
 
 .estado-error {
-  color: #ff8a80;
+  color: #d64545;
 }
 
 .estado a {
@@ -139,7 +145,7 @@ a.marca {
   align-items: center;
   gap: 16px;
   padding: 10px 16px;
-  background: rgba(14, 15, 18, 0.92);
+  background: var(--stage-chrome);
   border-bottom: 1px solid var(--borde);
 }
 
@@ -207,6 +213,10 @@ a.marca {
   height: auto;
   object-fit: contain;
   user-select: none;
+  /* Marco fino tipo pantalla alrededor de la foto. outline (no border) para
+     no alterar el tamaño medido por ResizeObserver, que posiciona soportes. */
+  outline: 2px solid #000;
+  outline-offset: 0;
 }
 
 /* Transición de "avance": la foto actual hace un leve zoom hacia adelante y se
@@ -239,6 +249,13 @@ a.marca {
 
 .editor-overlay-capa {
   touch-action: none;
+}
+
+/* Soportes con capa:'debajo' quedan detrás de la <img> (no posicionada, pinta
+   en el nivel intermedio del stacking context) gracias al z-index negativo. */
+.visor-overlay-detras,
+.editor-overlay-detras {
+  z-index: -1;
 }
 
 .visor-overlay-saliendo {
@@ -305,10 +322,11 @@ a.marca {
   justify-content: center;
   gap: 2%;
   container-type: size;
-  background:
-    linear-gradient(135deg, rgba(235, 105, 28, 0.16), rgba(235, 105, 28, 0.05));
-  border: 2px dashed rgba(235, 105, 28, 0.75);
-  color: var(--texto);
+  /* Fondo blanco semi-opaco (no solo un tinte translúcido): tiene que
+     leerse igual sobre una foto clara u oscura, sea cual sea el soporte. */
+  background: rgba(255, 255, 255, 0.88);
+  border: 2px dashed var(--naranja);
+  color: var(--naranja-oscuro);
   text-align: center;
   padding: 4%;
   animation: pulso-disponible 2.6s ease-in-out infinite;
@@ -346,6 +364,7 @@ a.marca {
 .hotspot {
   transform: translate(-50%, -50%);
   background: linear-gradient(135deg, var(--naranja-vivo), var(--naranja));
+  color: #fff;
   border: 2px solid #fff;
   border-radius: 999px;
   width: 46px;
@@ -393,10 +412,11 @@ a.marca {
   white-space: nowrap;
   font-size: 0.75rem;
   font-weight: 600;
+  color: #fff;
   background: rgba(14, 15, 18, 0.9);
   padding: 3px 10px;
   border-radius: 999px;
-  border: 1px solid var(--borde);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 /* ── Paradas ─────────────────────────────────────────────────────────── */
@@ -406,7 +426,7 @@ a.marca {
   gap: 6px;
   overflow-x: auto;
   padding: 10px 14px;
-  background: rgba(14, 15, 18, 0.92);
+  background: var(--stage-chrome);
   border-top: 1px solid var(--borde);
 }
 
@@ -431,6 +451,7 @@ a.marca {
 
 .parada-activa {
   background: linear-gradient(135deg, var(--naranja-vivo), var(--naranja));
+  color: #fff;
   border-color: transparent;
   opacity: 1;
   font-weight: 600;
@@ -474,8 +495,8 @@ a.marca {
   justify-content: center;
   padding: 24px;
   background:
-    radial-gradient(80% 70% at 50% 20%, rgba(232, 96, 28, 0.22), transparent 65%),
-    rgba(10, 11, 13, 0.94);
+    radial-gradient(80% 70% at 50% 20%, rgba(235, 105, 28, 0.14), transparent 65%),
+    rgba(255, 255, 255, 0.97);
   animation: aparecer 300ms ease-out;
 }
 
@@ -493,10 +514,7 @@ a.marca {
   font-size: clamp(2.2rem, 9vw, 3.4rem);
   letter-spacing: -0.02em;
   line-height: 1;
-  background: linear-gradient(135deg, #fff, var(--naranja-vivo));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--naranja);
 }
 
 .splash-card p {
@@ -521,7 +539,7 @@ a.marca {
   display: flex;
   gap: 4px;
   padding: 8px 14px 0;
-  background: rgba(14, 15, 18, 0.92);
+  background: var(--stage-chrome);
 }
 
 .prog {
@@ -603,7 +621,7 @@ a.marca {
 }
 
 .clave-input {
-  background: #1a1d22;
+  background: #fff;
   border: 1px solid var(--borde);
   color: var(--texto);
   border-radius: 8px;
@@ -619,7 +637,7 @@ a.marca {
 }
 
 .clave-error {
-  color: #ff8a80 !important;
+  color: #d64545 !important;
   font-size: 0.85rem;
 }
 
@@ -788,7 +806,7 @@ a.marca {
   top: 10px;
   left: 10px;
   background: rgba(14, 15, 18, 0.78);
-  color: var(--texto);
+  color: #fff;
   font-size: 0.66rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -813,7 +831,7 @@ a.marca {
   justify-content: center;
   color: var(--texto-suave);
   font-size: 0.8rem;
-  background: repeating-linear-gradient(45deg, #14161a, #14161a 12px, #17191e 12px, #17191e 24px);
+  background: repeating-linear-gradient(45deg, #ececea, #ececea 12px, #f4f3f1 12px, #f4f3f1 24px);
 }
 
 .card-body {
@@ -839,22 +857,75 @@ a.marca {
   font-size: 0.78rem;
 }
 
-.card-acciones {
+.card-ver {
+  margin-top: 10px;
+}
+
+.card-titulo-fila {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
-  margin-top: 8px;
 }
 
-.card-editar {
+/* Menú de administración: discreto (ícono chico), para que la landing quede
+   limpia para planners. Sigue pidiendo la clave al ir a Armar/Clientes. */
+.card-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.card-menu-boton {
+  background: transparent;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  font-size: 0.85rem;
   color: var(--texto-suave);
-  text-decoration: none;
-  font-size: 0.78rem;
+  opacity: 0.6;
 }
 
-.card-editar:hover {
+.card-menu-boton:hover {
+  opacity: 1;
+  color: var(--naranja);
+  border-color: var(--naranja);
+}
+
+.card-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 140px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.card-menu-dropdown a {
+  color: var(--texto);
+  text-decoration: none;
+  font-size: 0.82rem;
+  padding: 7px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+.card-menu-dropdown a:hover {
+  background: rgba(235, 105, 28, 0.15);
   color: var(--naranja-vivo);
+}
+
+.home-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
 }
 
 .home-nuevo {
@@ -872,7 +943,7 @@ a.marca {
 .home-nuevo-campos input {
   flex: 1;
   min-width: 170px;
-  background: #1a1d22;
+  background: #fff;
   border: 1px solid var(--borde);
   color: var(--texto);
   border-radius: 6px;
@@ -950,7 +1021,7 @@ a.marca {
 
 .editor-estado-error-quota,
 .editor-estado-error {
-  color: #ff8a80;
+  color: #d64545;
 }
 
 .editor-volver {
@@ -1068,7 +1139,7 @@ a.marca {
 .panel-campos select,
 .panel-cliente-nuevo input,
 .panel-punto-item input {
-  background: #1a1d22;
+  background: #fff;
   border: 1px solid var(--borde);
   color: var(--texto);
   border-radius: 6px;
@@ -1087,6 +1158,19 @@ a.marca {
   font-size: 0.75rem;
   opacity: 0.6;
   margin: 4px 0;
+}
+
+.panel-link-clientes {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--naranja);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.panel-link-clientes:hover {
+  text-decoration: underline;
 }
 
 .panel-lista {
@@ -1298,6 +1382,31 @@ a.marca {
   text-align: center;
 }
 
+.carga-masiva {
+  background: rgba(235, 105, 28, 0.08);
+  border: 1px dashed rgba(235, 105, 28, 0.4);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.carga-masiva-botones {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.carga-masiva-botones button {
+  background: var(--naranja);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 9px 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 @media (max-width: 800px) {
   .clientes-modo {
     flex-direction: column;
@@ -1395,7 +1504,8 @@ a.marca {
   font-size: 0.72rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--texto-suave);
+  /* El cartel se muestra sobre el stage, que se mantiene oscuro a propósito. */
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .lugar-banner strong {
